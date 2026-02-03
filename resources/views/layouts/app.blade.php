@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     @stack('styles')
     <style>
+        /* [Previous styles remain exactly the same] */
         * {
             font-family: 'Poppins', sans-serif;
         }
@@ -198,6 +199,10 @@
             animation: pulse-badge 2s infinite;
         }
 
+        .notification-badge.hidden {
+            display: none;
+        }
+
         @keyframes pulse-badge {
             0%, 100% {
                 transform: scale(1);
@@ -243,6 +248,19 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+
+        /* Notification item styles */
+        .notification-item {
+            transition: background-color 0.2s;
+        }
+
+        .notification-item.unread {
+            background-color: #eff6ff;
+        }
+
+        .dark .notification-item.unread {
+            background-color: #1e3a5f;
         }
 
         /* Button yang lebih besar dan jelas */
@@ -335,7 +353,7 @@
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen overflow-hidden">
-        <!-- Sidebar - Lebih Simple dan Friendly -->
+        <!-- Sidebar - [Keep existing sidebar code exactly the same] -->
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-white transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static flex flex-col shadow-lg border-r border-gray-200">
             
             <!-- Logo Header - Lebih Besar dan Jelas -->
@@ -522,7 +540,7 @@
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col overflow-hidden">
             
-            <!-- Header yang Friendly dengan Search Prominent -->
+            <!-- Header dengan Notifikasi Real-time -->
             <header class="bg-white sticky top-0 z-30 border-b border-gray-200 shadow-sm">
                 <div class="px-4 lg:px-8 py-4">
                     <div class="flex items-center gap-4">
@@ -584,7 +602,7 @@
                                 <span class="hidden sm:inline">Filter</span>
                             </button>
 
-                            <!-- Notification Button -->
+                            <!-- Notification Button with Real Data -->
                             <div class="relative">
                                 <button 
                                     id="notificationBtn"
@@ -592,82 +610,79 @@
                                     data-tooltip="Notifikasi"
                                 >
                                     <i class="fas fa-bell text-lg"></i>
-                                    <!-- Badge notifikasi -->
-                                    <span class="notification-badge">3</span>
+                                    @if(Auth::user()->unreadNotifications->count() > 0)
+                                        <span class="notification-badge" id="notificationBadge">
+                                            {{ Auth::user()->unreadNotifications->count() }}
+                                        </span>
+                                    @endif
                                 </button>
 
-                                <!-- Notification Dropdown -->
+                                <!-- Notification Dropdown with Real Notifications -->
                                 <div id="notificationDropdown" class="notification-dropdown">
                                     <div class="p-4 border-b border-gray-200">
                                         <div class="flex items-center justify-between">
                                             <h3 class="font-bold text-gray-900 text-lg">Notifikasi</h3>
-                                            <button class="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                                                Tandai Semua Dibaca
-                                            </button>
+                                            @if(Auth::user()->unreadNotifications->count() > 0)
+                                                <button 
+                                                    id="markAllRead"
+                                                    class="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                                                >
+                                                    Tandai Semua Dibaca
+                                                </button>
+                                            @endif
                                         </div>
                                     </div>
                                     
-                                    <div class="max-h-96 overflow-y-auto">
-                                        <!-- Notification Item Example -->
-                                        <div class="p-4 hover:bg-gray-50 border-b border-gray-100 cursor-pointer">
-                                            <div class="flex gap-3">
-                                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                                    <i class="fas fa-book text-blue-600"></i>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <p class="text-sm font-medium text-gray-900 mb-1">
-                                                        Buku "Harry Potter" tersedia!
-                                                    </p>
-                                                    <p class="text-xs text-gray-500">
-                                                        Buku yang Anda tunggu sudah bisa dipinjam
-                                                    </p>
-                                                    <p class="text-xs text-gray-400 mt-1">2 jam yang lalu</p>
-                                                </div>
-                                                <div class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
-                                            </div>
-                                        </div>
-
-                                        <div class="p-4 hover:bg-gray-50 border-b border-gray-100 cursor-pointer">
-                                            <div class="flex gap-3">
-                                                <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                                    <i class="fas fa-clock text-amber-600"></i>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <p class="text-sm font-medium text-gray-900 mb-1">
-                                                        Pengingat: Batas pengembalian besok
-                                                    </p>
-                                                    <p class="text-xs text-gray-500">
-                                                        Jangan lupa kembalikan "The Hobbit"
-                                                    </p>
-                                                    <p class="text-xs text-gray-400 mt-1">5 jam yang lalu</p>
-                                                </div>
-                                                <div class="w-2 h-2 bg-amber-500 rounded-full flex-shrink-0 mt-2"></div>
-                                            </div>
-                                        </div>
-
-                                        <div class="p-4 hover:bg-gray-50 border-b border-gray-100 cursor-pointer">
-                                            <div class="flex gap-3">
-                                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                                    <i class="fas fa-check-circle text-green-600"></i>
-                                                </div>
-                                                <div class="flex-1">
-                                                    <p class="text-sm font-medium text-gray-900 mb-1">
-                                                        Pengembalian berhasil!
-                                                    </p>
-                                                    <p class="text-xs text-gray-500">
-                                                        Terima kasih sudah mengembalikan tepat waktu
-                                                    </p>
-                                                    <p class="text-xs text-gray-400 mt-1">1 hari yang lalu</p>
+                                    <div class="max-h-96 overflow-y-auto" id="notificationList">
+                                        @forelse(Auth::user()->notifications()->limit(5)->get() as $notification)
+                                            @php
+                                                $data = $notification->data;
+                                                $iconColors = [
+                                                    'amber' => 'bg-amber-100 text-amber-600',
+                                                    'blue' => 'bg-blue-100 text-blue-600',
+                                                    'green' => 'bg-green-100 text-green-600',
+                                                    'red' => 'bg-red-100 text-red-600',
+                                                    'orange' => 'bg-orange-100 text-orange-600',
+                                                ];
+                                                $iconColor = $iconColors[$data['icon_color'] ?? 'blue'] ?? 'bg-blue-100 text-blue-600';
+                                            @endphp
+                                            <div class="notification-item p-4 hover:bg-gray-50 border-b border-gray-100 cursor-pointer {{ $notification->read_at ? '' : 'unread' }}"
+                                                 data-notification-id="{{ $notification->id }}">
+                                                <div class="flex gap-3">
+                                                    <div class="w-10 h-10 {{ $iconColor }} rounded-full flex items-center justify-center flex-shrink-0">
+                                                        <i class="fas {{ $data['icon'] ?? 'fa-bell' }}"></i>
+                                                    </div>
+                                                    <div class="flex-1">
+                                                        <p class="text-sm font-medium text-gray-900 mb-1">
+                                                            {{ $data['title'] ?? 'Notifikasi' }}
+                                                        </p>
+                                                        <p class="text-xs text-gray-500">
+                                                            {{ $data['message'] ?? '' }}
+                                                        </p>
+                                                        <p class="text-xs text-gray-400 mt-1">
+                                                            {{ $notification->created_at->diffForHumans() }}
+                                                        </p>
+                                                    </div>
+                                                    @if(!$notification->read_at)
+                                                        <div class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
+                                                    @endif
                                                 </div>
                                             </div>
-                                        </div>
+                                        @empty
+                                            <div class="p-8 text-center">
+                                                <i class="fas fa-bell-slash text-4xl text-gray-300 mb-3"></i>
+                                                <p class="text-gray-500 text-sm">Tidak ada notifikasi</p>
+                                            </div>
+                                        @endforelse
                                     </div>
 
-                                    <div class="p-3 border-t border-gray-200 text-center">
-                                        <a href="#" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                                            Lihat Semua Notifikasi
-                                        </a>
-                                    </div>
+                                    @if(Auth::user()->notifications->count() > 0)
+                                        <div class="p-3 border-t border-gray-200 text-center">
+                                            <a href="{{ route('notifications.index') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                                                Lihat Semua Notifikasi
+                                            </a>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
 
@@ -690,6 +705,7 @@
                 </div>
             </header>
 
+            <!-- [Keep Filter Panel and rest of the layout exactly the same] -->
             <!-- Filter Panel (Slide dari kanan) -->
             <div id="filterPanel" class="fixed inset-y-0 right-0 z-50 w-full sm:w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 overflow-y-auto">
                 
@@ -985,6 +1001,79 @@
                 notificationDropdown?.classList.remove('show');
             }
         });
+
+        // Mark notification as read when clicked
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const notificationId = this.dataset.notificationId;
+                
+                fetch(`/notifications/${notificationId}/read`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.classList.remove('unread');
+                        this.querySelector('.bg-blue-500')?.remove();
+                        
+                        // Update badge count
+                        updateNotificationBadge();
+                    }
+                });
+            });
+        });
+
+        // Mark all as read
+        document.getElementById('markAllRead')?.addEventListener('click', function() {
+            fetch('/notifications/mark-all-read', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelectorAll('.notification-item').forEach(item => {
+                        item.classList.remove('unread');
+                    });
+                    document.querySelectorAll('.bg-blue-500').forEach(dot => dot.remove());
+                    this.style.display = 'none';
+                    
+                    // Update badge
+                    const badge = document.getElementById('notificationBadge');
+                    if (badge) {
+                        badge.classList.add('hidden');
+                    }
+                }
+            });
+        });
+
+        // Function to update notification badge
+        function updateNotificationBadge() {
+            fetch('/notifications/unread-count')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('notificationBadge');
+                    if (data.count > 0) {
+                        if (badge) {
+                            badge.textContent = data.count;
+                            badge.classList.remove('hidden');
+                        }
+                    } else {
+                        if (badge) {
+                            badge.classList.add('hidden');
+                        }
+                    }
+                });
+        }
 
         // Close all panels on escape
         document.addEventListener('keydown', (e) => {

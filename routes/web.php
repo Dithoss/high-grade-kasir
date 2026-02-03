@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FineController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TransactionController;
@@ -41,6 +42,24 @@ Route::resource('products', ProductController::class)->except('show');
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
+ Route::get('/notifications', [NotificationController::class, 'index'])
+        ->name('notifications.index');
+    
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])
+        ->name('notifications.unread-count');
+    
+    Route::get('/notifications/recent', [NotificationController::class, 'recent'])
+        ->name('notifications.recent');
+    
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])
+        ->name('notifications.read');
+    
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])
+        ->name('notifications.mark-all-read');
+    
+    // Delete notification
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])
+        ->name('notifications.destroy');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
     Route::get('/users/dashboard', [AuthController::class, 'userDashboard'])->name('users.dashboard');

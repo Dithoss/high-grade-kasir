@@ -7,3 +7,5 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 Schedule::command('model:prune')->daily();
+Schedule::command('library:check-due')->everyMinute();
+

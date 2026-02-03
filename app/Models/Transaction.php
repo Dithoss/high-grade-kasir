@@ -25,7 +25,10 @@ class Transaction extends Model
         'returned_at' => 'datetime',
         'due_at' => 'datetime',
     ];
-
+    public function book()
+    {
+        return $this->belongsTo(Book::class);
+    }
     public function user()
     {
         return $this->belongsTo(User::class);
