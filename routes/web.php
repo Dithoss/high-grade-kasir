@@ -8,6 +8,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FineController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PreorderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\TripayCallbackController;
@@ -98,6 +99,7 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware(['role:' . UserRole::ADMIN->value])->group(function () {
+        Route::get('/admin/preorders', [PreorderController::class, 'adminIndex'])->name('admin.preorders.index');
         Route::delete('/categories/mass-delete', [CategoryController::class, 'massDelete'])
             ->name('categories.mass-delete');
         Route::delete('/books/mass-delete', [BookController::class, 'massDelete'])
@@ -167,7 +169,7 @@ Route::middleware('auth')->group(function () {
     | ROLE: USER
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['role:' . UserRole::USER->value])->group(function () {
+    Route::middleware(['role:' . UserRole::USER->value, 'preorder.throttle'])->group(function () {
         Route::post('{id}/request-return',[TransactionController::class, 'requestReturn'])->name('request-return');
          Route::get('/my-fines', [FineController::class, 'index'])
         ->name('fines.index');
@@ -176,6 +178,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/books/{book}/related', [BookController::class, 'related'])
         ->name('books.related');
         Route::post('transactions/{id}/request-extend',[TransactionController::class, 'requestExtend'])->name('transactions.request-extend');
-
+        Route::get('/preorders', [PreorderController::class, 'index'])->name('preorders.index');
+        Route::post('/preorders', [PreorderController::class, 'store'])->name('preorders.store');
+        Route::put('/preorders/{id}', [PreorderController::class, 'update'])->name('preorders.update');
+        Route::delete('/preorders/{id}', [PreorderController::class, 'cancel'])->name('preorders.cancel');
+        Route::get('/preorders/{id}/confirm', [PreorderController::class, 'confirm'])->name('preorders.confirm');
     });
 });
