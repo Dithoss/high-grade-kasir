@@ -169,7 +169,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-mono font-semibold text-gray-900">
-                                        #{{ substr($fine->transaction_id, 0, 8) }}
+                                        #{{ substr($fine->transaction->receipt_number, 0, 8) }}
                                     </div>
                                     <div class="text-xs text-gray-500">
                                         {{ $fine->transaction->items->first()->book->name ?? '-' }}

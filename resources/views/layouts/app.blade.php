@@ -425,7 +425,7 @@
                         </a>
                     </div>
 
-                    
+                    @role('admin')
                     <a href="{{ route('transactions.index') }}" 
                        class="nav-link flex items-center px-4 py-3.5 text-gray-700 hover:bg-blue-50 rounded-xl group"
                        data-page="transactions">
@@ -433,13 +433,10 @@
                             <i class="fas fa-exchange-alt icon-large text-amber-600"></i>
                         </div>
                         <span class="ml-4 font-medium text-base">
-                            @role('user')
-                                Peminjaman Saya
-                            @else
                                 Peminjaman
-                            @endrole
                         </span>
                     </a>
+                    @endrole
 
                     @role('admin')
                         <div class="pt-6 pb-2">

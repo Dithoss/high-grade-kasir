@@ -33,15 +33,38 @@
         </div>
     </div>
 
+    @php
+        // Hitung semua stat di satu tempat, akurat dari DB langsung
+        $totalBooks      = \App\Models\Book::count();
+        $totalCategories = \App\Models\Category::count();
+
+        $activeBorrowed = \App\Models\Transaction::where('user_id', auth()->id())
+            ->whereIn('status', ['borrowed', 'return_requested'])
+            ->count();
+
+        $unpaidFines = \App\Models\Fine::whereHas('transaction', function($q) {
+                $q->where('user_id', auth()->id());
+            })
+            ->where('status', 'unpaid')
+            ->sum('amount');
+
+        $hasActiveFine = \App\Models\Fine::whereHas('transaction', function($q) {
+                $q->where('user_id', auth()->id());
+            })
+            ->whereIn('status', ['unpaid', 'pending_confirmation'])
+            ->exists();
+    @endphp
+
     <div class="">
         {{-- Quick Stats Cards --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
             {{-- Total Books --}}
-            <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
+            <a href="{{ route('books.index') }}" class="block bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs text-gray-500 mb-1">Total Buku</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ \App\Models\Book::count() }}</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $totalBooks }}</p>
                     </div>
                     <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,14 +72,15 @@
                         </svg>
                     </div>
                 </div>
-            </div>
+                <p class="text-xs text-blue-500 mt-2">Lihat semua buku →</p>
+            </a>
 
             {{-- Total Categories --}}
-            <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
+            <a href="{{ route('categories.index') }}" class="block bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md hover:border-purple-200 transition-all">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs text-gray-500 mb-1">Kategori</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ \App\Models\Category::count() }}</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $totalCategories }}</p>
                     </div>
                     <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                         <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,21 +88,15 @@
                         </svg>
                     </div>
                 </div>
-            </div>
+                <p class="text-xs text-purple-500 mt-2">Lihat semua kategori →</p>
+            </a>
 
             {{-- Currently Borrowed --}}
-            <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
+            <a href="{{ route('transactions.index') }}" class="block bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs text-gray-500 mb-1">Sedang Dipinjam</p>
-                        <p class="text-2xl font-bold text-gray-900">
-                            @php
-                                $borrowed = \App\Models\Transaction::where('user_id', auth()->id())
-                                    ->whereNull('returned_at')
-                                    ->count();
-                            @endphp
-                            {{ $borrowed }}
-                        </p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $activeBorrowed }}</p>
                     </div>
                     <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,32 +104,49 @@
                         </svg>
                     </div>
                 </div>
-            </div>
+                <p class="text-xs text-blue-500 mt-2">Lihat transaksi →</p>
+            </a>
 
             {{-- Total Unpaid Fines --}}
-            <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
+            <a href="{{ route('fines.index') }}" class="block bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md {{ $unpaidFines > 0 ? 'hover:border-red-200' : 'hover:border-green-200' }} transition-all">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-xs text-gray-500 mb-1">Denda Belum Bayar</p>
-                        @php
-                            $unpaidFines = \App\Models\Fine::whereHas('transaction', function($q) {
-                                    $q->where('user_id', auth()->id());
-                                })
-                                ->where('status', 'unpaid')
-                                ->sum('amount');
-                        @endphp
-                        <p class="text-lg font-bold text-gray-900">
+                        <p class="text-lg font-bold {{ $unpaidFines > 0 ? 'text-red-600' : 'text-gray-900' }}">
                             Rp {{ number_format($unpaidFines, 0, ',', '.') }}
                         </p>
                     </div>
-                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-12 h-12 {{ $unpaidFines > 0 ? 'bg-red-100' : 'bg-gray-100' }} rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 {{ $unpaidFines > 0 ? 'text-red-600' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
                 </div>
+                <p class="text-xs {{ $unpaidFines > 0 ? 'text-red-500' : 'text-gray-400' }} mt-2">
+                    {{ $unpaidFines > 0 ? 'Bayar sekarang →' : 'Tidak ada denda' }}
+                </p>
+            </a>
+        </div>
+
+        {{-- Fine Warning Banner (jika ada denda aktif) --}}
+        @if($hasActiveFine)
+        <div class="bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 rounded-xl p-5 mb-8 shadow-md">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <svg class="h-6 w-6 text-red-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <div>
+                        <p class="font-semibold text-red-800">Peminjaman Ditangguhkan</p>
+                        <p class="text-sm text-red-600">Anda memiliki denda yang belum dibayar. Lunasi untuk bisa meminjam buku baru.</p>
+                    </div>
+                </div>
+                <a href="{{ route('fines.index') }}" class="flex-shrink-0 ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-all">
+                    Bayar Denda
+                </a>
             </div>
         </div>
+        @endif
 
         {{-- Personalized Recommendations --}}
         @php
@@ -184,6 +219,30 @@
                     <span class="text-sm font-medium text-gray-700 group-hover:text-blue-600">Cari Buku</span>
                 </a>
 
+                @if($hasActiveFine)
+                    {{-- Jika ada denda, tombol pinjam mengarah ke fines dulu --}}
+                    <a href="{{ route('fines.index') }}" 
+                       class="group flex flex-col items-center p-4 rounded-lg hover:bg-red-50 transition-colors border border-red-100 bg-red-50/50">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-red-200 transition-colors">
+                            <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                        <span class="text-sm font-medium text-red-600">Bayar Denda Dulu</span>
+                        <span class="text-xs text-red-400 mt-1">Peminjaman ditangguhkan</span>
+                    </a>
+                @else
+                    <a href="{{ route('transactions.create') }}" 
+                       class="group flex flex-col items-center p-4 rounded-lg hover:bg-blue-50 transition-colors border border-gray-100">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
+                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                        </div>
+                        <span class="text-sm font-medium text-gray-700 group-hover:text-blue-600">Pinjam Buku</span>
+                    </a>
+                @endif
+
                 <a href="{{ route('transactions.index') }}" 
                    class="group flex flex-col items-center p-4 rounded-lg hover:bg-blue-50 transition-colors border border-gray-100">
                     <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
@@ -202,16 +261,6 @@
                         </svg>
                     </div>
                     <span class="text-sm font-medium text-gray-700 group-hover:text-purple-600">Kategori</span>
-                </a>
-
-                <a href="{{ route('fines.index') }}" 
-                   class="group flex flex-col items-center p-4 rounded-lg hover:bg-red-50 transition-colors border border-gray-100">
-                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-red-200 transition-colors">
-                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <span class="text-sm font-medium text-gray-700 group-hover:text-red-600">Denda Saya</span>
                 </a>
             </div>
         </div>

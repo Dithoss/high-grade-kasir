@@ -45,7 +45,11 @@ Route::resource('products', ProductController::class)->except('show');
 Route::middleware('auth')->group(function () {
      Route::get('transactions/history', [TransactionController::class, 'history'])
         ->name('transactions.history');
+    Route::get('/books/barcode-lookup', [BookController::class, 'barcodeLookup'])
+    ->name('books.barcode-lookup');
     
+    Route::get('/books/catalog', [BookController::class, 'catalog'])->name('books.catalog');
+
     // Bukti transaksi - untuk semua user
     Route::get('transactions/{id}/receipt', [TransactionController::class, 'receipt'])
         ->name('transactions.receipt');

@@ -26,28 +26,39 @@ class TransactionController extends Controller
     /**
      * List transaksi + filter
      */
-    public function index(Request $request)
-    {
-        $filters = $request->only([
-            'search',
-            'sort_by',
-            'sort_dir',
-            'category_id',
-            'book_id',
-            'date_from',
-            'date_to',
-            'status'
-        ]);
+public function index(Request $request)
+{
+    $filters = $request->only([
+        'search',
+        'sort_by',
+        'sort_dir',
+        'category_id',
+        'book_id',
+        'date_from',
+        'date_to',
+        'status'
+    ]);
 
-        $userId = auth()->user()->hasRole('user') ? auth()->id() : null;
-        $transactions = $this->repo->getWithFilters($filters, $userId);
+    $user = auth()->user();
+    $userId = $user->hasRole('user') ? $user->id : null;
 
-        return view('transactions.index', compact('transactions'));
+    $transactions = $this->repo->getWithFilters($filters, $userId);
+
+    if ($user->hasRole('user')) {
+        return view('transactions.index-user', compact('transactions'));
     }
+
+    return view('transactions.index', compact('transactions'));
+}
+
 
     public function create()
     {
-        return view('transactions.create');
+        $books = \App\Models\Book::with('category')
+                ->whereNull('deleted_at')  // karena pakai SoftDeletes
+                ->get();
+
+    return view('transactions.create', compact('books'));
     }
 
     public function store(StoreTransaction $request)

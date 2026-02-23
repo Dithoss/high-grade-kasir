@@ -17,7 +17,7 @@ class BookSeeder extends Seeder
             $categories = Category::all();
 
             Book::factory()
-                ->count(20)
+                ->count(10)
                 ->create([
                     'category_id' => fn () => $categories->random()->id,
                 ]);

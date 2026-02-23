@@ -14,7 +14,7 @@
             </div>
             <div>
                 <h1 class="text-3xl font-bold mb-1">Pinjam Buku Baru 📚</h1>
-                <p class="text-blue-100">Pilih buku yang ingin Anda pinjam dari koleksi kami</p>
+                <p class="text-blue-100">Pilih buku via barcode scanner atau pilih manual dari koleksi</p>
             </div>
         </div>
     </div>
@@ -78,6 +78,69 @@
                     </div>
                 </div>
 
+                <!-- ═══════════════════════════════════════════════════════
+                     BARCODE SCANNER SECTION (BARU)
+                ═══════════════════════════════════════════════════════ -->
+                <div class="bg-white rounded-xl shadow-md p-6 border-2 border-dashed border-indigo-200">
+                    <h3 class="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                        </svg>
+                        Scan / Input Barcode
+                        <span class="ml-1 text-xs font-medium bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full">Cepat</span>
+                    </h3>
+                    <p class="text-sm text-gray-500 mb-4">Scan barcode buku menggunakan scanner atau ketik manual lalu tekan Enter / klik tombol Tambah.</p>
+
+                    <div class="flex gap-3">
+                        <div class="relative flex-1">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                                </svg>
+                            </div>
+                            <input
+                                type="text"
+                                id="barcodeInput"
+                                placeholder="Scan atau ketik barcode buku..."
+                                autocomplete="off"
+                                class="w-full pl-10 pr-4 py-3 border-2 border-indigo-200 rounded-lg focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all outline-none font-mono text-sm"
+                            >
+                        </div>
+                        <button
+                            type="button"
+                            id="btnScanBarcode"
+                            class="inline-flex items-center px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition-all gap-2 whitespace-nowrap"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Tambah
+                        </button>
+                    </div>
+
+                    <!-- Feedback barcode -->
+                    <div id="barcodeFeedback" class="hidden mt-3 p-3 rounded-lg text-sm font-medium flex items-center gap-2"></div>
+
+                    <!-- Barcode preview card (muncul saat buku ditemukan) -->
+                    <div id="barcodePreview" class="hidden mt-3 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div id="barcodePreviewCover" class="w-12 h-16 rounded overflow-hidden flex-shrink-0 bg-indigo-100 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p id="barcodePreviewName" class="font-bold text-gray-900 truncate"></p>
+                                <p id="barcodePreviewWriter" class="text-sm text-gray-500 truncate"></p>
+                                <p id="barcodePreviewStock" class="text-xs font-semibold mt-0.5"></p>
+                            </div>
+                            <div class="flex-shrink-0">
+                                <span id="barcodePreviewBadge" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Daftar Buku Terpilih -->
                 <div class="bg-white rounded-xl shadow-md p-6">
                     <div class="flex items-center justify-between mb-4">
@@ -91,9 +154,9 @@
                         <button type="button" id="btnOpenModal"
                             class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
                             </svg>
-                            Tambah Buku
+                            Pilih dari Katalog
                         </button>
                     </div>
                     <div id="selectedBooksList" class="space-y-3">
@@ -102,7 +165,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                             </svg>
                             <p class="font-semibold">Belum ada buku dipilih</p>
-                            <p class="text-sm mt-1">Klik "Tambah Buku" untuk memilih buku</p>
+                            <p class="text-sm mt-1">Scan barcode atau klik "Pilih dari Katalog"</p>
                         </div>
                     </div>
                     @error('items')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
@@ -150,6 +213,32 @@
                     </div>
                 </div>
 
+                <!-- Cara Input Buku -->
+                <div class="bg-white rounded-xl shadow-md p-5 border border-gray-100">
+                    <h4 class="font-bold text-gray-800 mb-3 flex items-center gap-2 text-sm">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Cara Menambah Buku
+                    </h4>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3 p-3 bg-indigo-50 rounded-lg">
+                            <div class="w-7 h-7 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">1</div>
+                            <div>
+                                <p class="text-sm font-semibold text-indigo-800">Via Barcode Scanner</p>
+                                <p class="text-xs text-indigo-600 mt-0.5">Arahkan scanner ke barcode buku, buku langsung ditambahkan otomatis</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
+                            <div class="w-7 h-7 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">2</div>
+                            <div>
+                                <p class="text-sm font-semibold text-purple-800">Via Pilih Katalog</p>
+                                <p class="text-xs text-purple-600 mt-0.5">Klik "Pilih dari Katalog" untuk browse dan pilih buku secara manual</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl shadow-md p-6 border-2 border-amber-200">
                     <h4 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
                         <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,20 +258,15 @@
     </form>
 </div>
 
-
 {{-- ============================================================ --}}
-{{--   MODAL — di luar semua div, pakai style bukan class hidden  --}}
+{{--   MODAL KATALOG BUKU                                         --}}
 {{-- ============================================================ --}}
 <div id="bookModal" style="display:none; position:fixed; inset:0; z-index:9999; overflow:hidden;">
-    {{-- Backdrop --}}
     <div id="modalBackdrop" style="position:absolute; inset:0; background:rgba(17,24,39,0.65); backdrop-filter:blur(3px);"></div>
-
-    {{-- Centering wrapper --}}
     <div style="position:relative; display:flex; align-items:center; justify-content:center; min-height:100%; padding:1rem; pointer-events:none;">
         <div id="modalPanel"
              style="pointer-events:all; background:white; border-radius:1rem; box-shadow:0 25px 60px rgba(0,0,0,0.3); width:100%; max-width:72rem; max-height:90vh; display:flex; flex-direction:column; overflow:hidden; transform:scale(0.93); opacity:0; transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s ease;">
 
-            {{-- Header --}}
             <div style="background:linear-gradient(135deg,#7c3aed,#4f46e5); padding:1.25rem 1.5rem; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
                 <div style="display:flex; align-items:center; gap:0.75rem;">
                     <div style="background:rgba(255,255,255,0.2); border-radius:0.75rem; padding:0.625rem;">
@@ -191,7 +275,7 @@
                         </svg>
                     </div>
                     <div>
-                        <h2 style="color:white; font-size:1.2rem; font-weight:700; margin:0;">Pilih Buku untuk Dipinjam</h2>
+                        <h2 style="color:white; font-size:1.2rem; font-weight:700; margin:0;">Pilih Buku dari Katalog</h2>
                         <p style="color:rgba(221,214,254,0.9); font-size:0.75rem; margin:2px 0 0;">Klik buku untuk memilih • klik lagi untuk batal</p>
                     </div>
                 </div>
@@ -204,14 +288,13 @@
                 </button>
             </div>
 
-            {{-- Search & Filter --}}
             <div style="padding:1rem 1.5rem; border-bottom:1px solid #f0f0f0; background:#fafafa; flex-shrink:0;">
                 <div style="display:flex; flex-wrap:wrap; gap:0.75rem;">
                     <div style="position:relative; flex:1; min-width:200px;">
                         <svg style="position:absolute; left:0.875rem; top:50%; transform:translateY(-50%); width:1rem; height:1rem; stroke:#9ca3af; fill:none;" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
-                        <input type="text" id="bookSearchInput" placeholder="Cari judul, penulis, kategori..."
+                        <input type="text" id="bookSearchInput" placeholder="Cari judul, penulis, barcode, kategori..."
                             style="width:100%; padding:0.625rem 1rem 0.625rem 2.5rem; border:2px solid #e5e7eb; border-radius:0.75rem; font-size:0.875rem; outline:none; transition:border-color 0.15s; box-sizing:border-box;"
                             onfocus="this.style.borderColor='#a78bfa'" onblur="this.style.borderColor='#e5e7eb'">
                     </div>
@@ -231,7 +314,6 @@
                 <p id="modalResultCount" style="font-size:0.75rem; color:#9ca3af; margin:0.5rem 0 0 0.25rem;"></p>
             </div>
 
-            {{-- Book Grid --}}
             <div style="flex:1; overflow-y:auto; padding:1.5rem;">
                 <div id="modalBookGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:1rem;"></div>
                 <div id="modalEmptyState" style="display:none; flex-direction:column; align-items:center; justify-content:center; padding:5rem 0; text-align:center;">
@@ -245,7 +327,6 @@
                 </div>
             </div>
 
-            {{-- Footer --}}
             <div id="modalFooter" style="display:none; border-top:1px solid #e5e7eb; background:#f9fafb; padding:1rem 1.5rem; flex-shrink:0;">
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
                     <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; flex:1; min-width:0;">
@@ -268,47 +349,65 @@
     </div>
 </div>
 
-
 <script>
     /* ── DATA ── */
     var ALL_BOOKS     = {!! json_encode($books ?? []) !!};
+    var BARCODE_LOOKUP_URL = '{{ route('books.barcode-lookup') }}';
     var selectedBooks = [];
     var modalPending  = {};
     var itemIndex     = 0;
 
-    /* ── WAIT DOM ── */
+    /* ══════════════════════════════════════════
+       BARCODE SCANNER LOGIC
+    ══════════════════════════════════════════ */
+    var barcodeDebounce = null;
+    var lastScannedBarcode = '';
+
     document.addEventListener('DOMContentLoaded', function () {
+        var barcodeInput = document.getElementById('barcodeInput');
+        var btnScan      = document.getElementById('btnScanBarcode');
 
-        /* Tombol buka modal */
-        document.getElementById('btnOpenModal').addEventListener('click', openModal);
-
-        /* Tombol tutup (X) */
-        document.getElementById('btnCloseModal').addEventListener('click', closeModal);
-
-        /* Klik backdrop */
-        document.getElementById('modalBackdrop').addEventListener('click', closeModal);
-
-        /* Konfirmasi — juga expose ke window agar inline onclick bisa akses */
-        document.getElementById('btnConfirmModal').addEventListener('click', confirmSelection);
-
-        /* Search */
-        document.getElementById('bookSearchInput').addEventListener('input', filterBooks);
-
-        /* Filter kategori & stok */
-        document.getElementById('modalCategoryFilter').addEventListener('change', filterBooks);
-        document.getElementById('modalStockFilter').addEventListener('change', filterBooks);
-
-        /* ESC */
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') closeModal();
+        // Enter key pada input barcode
+        barcodeInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                processBarcode(barcodeInput.value.trim());
+            }
         });
 
-        /* Update durasi saat tanggal berubah */
+        // Debounce untuk hardware scanner (scanner biasanya input cepat)
+        barcodeInput.addEventListener('input', function () {
+            clearTimeout(barcodeDebounce);
+            var val = barcodeInput.value.trim();
+            if (val.length >= 6) {
+                // Hardware scanner biasanya selesai < 100ms
+                barcodeDebounce = setTimeout(function () {
+                    // Cek apakah tidak ada aktivitas selama 150ms (ciri scanner)
+                    processBarcode(val);
+                }, 150);
+            }
+        });
+
+        // Tombol Tambah
+        btnScan.addEventListener('click', function () {
+            processBarcode(barcodeInput.value.trim());
+        });
+
+        /* Modal */
+        document.getElementById('btnOpenModal').addEventListener('click', openModal);
+        document.getElementById('btnCloseModal').addEventListener('click', closeModal);
+        document.getElementById('modalBackdrop').addEventListener('click', closeModal);
+        document.getElementById('btnConfirmModal').addEventListener('click', confirmSelection);
+        document.getElementById('bookSearchInput').addEventListener('input', filterBooks);
+        document.getElementById('modalCategoryFilter').addEventListener('change', filterBooks);
+        document.getElementById('modalStockFilter').addEventListener('change', filterBooks);
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+
+        /* Tanggal */
         var borrow = document.querySelector('[name="borrowed_at"]');
         var due    = document.querySelector('[name="due_at"]');
         if (borrow) borrow.addEventListener('change', updateSummary);
         if (due)    due.addEventListener('change', updateSummary);
-
         updateSummary();
 
         /* Auto-select dari URL ?book_id= */
@@ -320,42 +419,157 @@
             if (pre) addToList(pre);
             @endif
         @endif
+
+        // Focus barcode input saat halaman load
+        barcodeInput.focus();
     });
 
+    /* ── PROCESS BARCODE ── */
+    function processBarcode(barcode) {
+        if (!barcode) return;
+        if (barcode === lastScannedBarcode) {
+            // Buku sudah di-scan, reset & beri feedback
+            showBarcodeFeedback('info', '⚠️ Buku dengan barcode ini sudah ada di daftar.');
+            return;
+        }
+
+        showBarcodeFeedback('loading', '⏳ Mencari buku...');
+        hideBarcodePreview();
+
+        // Cari di ALL_BOOKS dulu (client-side, lebih cepat)
+        var found = ALL_BOOKS.find(function(b){
+            return b.barcode && b.barcode.toLowerCase() === barcode.toLowerCase();
+        });
+
+        if (found) {
+            handleFoundBook(found);
+            return;
+        }
+
+        // Jika tidak ketemu di client, fetch ke server
+        fetch(BARCODE_LOOKUP_URL + '?barcode=' + encodeURIComponent(barcode), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function(res) { return res.json().then(function(data){ return { ok: res.ok, data: data }; }); })
+        .then(function(result) {
+            if (result.ok) {
+                handleFoundBook(result.data);
+            } else {
+                showBarcodeFeedback('error', '❌ ' + (result.data.error || 'Buku tidak ditemukan'));
+                hideBarcodePreview();
+            }
+        })
+        .catch(function() {
+            showBarcodeFeedback('error', '❌ Gagal menghubungi server. Coba lagi.');
+        });
+    }
+
+    function handleFoundBook(book) {
+        // Cek sudah ada di list
+        var alreadyIn = selectedBooks.find(function(b){ return String(b.id) === String(book.id); });
+        if (alreadyIn) {
+            showBarcodeFeedback('warning', '⚠️ "' + book.name + '" sudah ada di daftar peminjaman.');
+            showBarcodePreview(book, false);
+            return;
+        }
+
+        if (book.stock <= 0) {
+            showBarcodeFeedback('error', '❌ Stok "' + book.name + '" habis, tidak dapat dipinjam.');
+            showBarcodePreview(book, false);
+            return;
+        }
+
+        showBarcodeFeedback('success', '✅ Buku ditemukan dan ditambahkan!');
+        showBarcodePreview(book, true);
+        addToList(book);
+
+        lastScannedBarcode = document.getElementById('barcodeInput').value.trim();
+        document.getElementById('barcodeInput').value = '';
+        lastScannedBarcode = '';
+
+        // Focus kembali ke barcode input untuk scan berikutnya
+        setTimeout(function() {
+            document.getElementById('barcodeInput').focus();
+        }, 300);
+    }
+
+    function showBarcodeFeedback(type, msg) {
+        var el = document.getElementById('barcodeFeedback');
+        var colors = {
+            success: 'background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;',
+            error:   'background:#fef2f2; color:#dc2626; border:1px solid #fecaca;',
+            warning: 'background:#fffbeb; color:#d97706; border:1px solid #fde68a;',
+            info:    'background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;',
+            loading: 'background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe;',
+        };
+        el.style.cssText = (colors[type] || colors.info) + ' display:flex; align-items:center; gap:0.5rem; padding:0.75rem; border-radius:0.5rem; font-size:0.875rem; font-weight:500; margin-top:0.75rem;';
+        el.textContent = msg;
+        el.classList.remove('hidden');
+        if (type === 'success') {
+            setTimeout(function(){ el.classList.add('hidden'); }, 3000);
+        }
+    }
+
+    function showBarcodePreview(book, isSuccess) {
+        var preview = document.getElementById('barcodePreview');
+        var nameEl  = document.getElementById('barcodePreviewName');
+        var writerEl= document.getElementById('barcodePreviewWriter');
+        var stockEl = document.getElementById('barcodePreviewStock');
+        var badge   = document.getElementById('barcodePreviewBadge');
+        var cover   = document.getElementById('barcodePreviewCover');
+
+        nameEl.textContent   = book.name || '-';
+        writerEl.textContent = book.writer || '-';
+
+        if (book.stock > 0) {
+            stockEl.style.color = '#16a34a';
+            stockEl.textContent = 'Stok: ' + book.stock;
+            badge.style.cssText = 'background:#dcfce7; color:#16a34a; padding:2px 8px; border-radius:9999px; font-size:11px; font-weight:700;';
+            badge.textContent   = 'Tersedia';
+        } else {
+            stockEl.style.color = '#dc2626';
+            stockEl.textContent = 'Stok habis';
+            badge.style.cssText = 'background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:9999px; font-size:11px; font-weight:700;';
+            badge.textContent   = 'Habis';
+        }
+
+        if (book.image) {
+            cover.innerHTML = '<img src="/storage/' + book.image + '" alt="' + x(book.name) + '" style="width:100%;height:100%;object-fit:cover;">';
+        } else {
+            cover.innerHTML = '<svg style="width:1.5rem;height:1.5rem;stroke:#a5b4fc;fill:none;" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>';
+        }
+
+        preview.style.borderColor = isSuccess ? '#6ee7b7' : '#fca5a5';
+        preview.style.background  = isSuccess ? '#f0fdf4' : '#fff1f2';
+        preview.classList.remove('hidden');
+    }
+
+    function hideBarcodePreview() {
+        document.getElementById('barcodePreview').classList.add('hidden');
+    }
+
     /* ══════════════════════════════════════════
-       OPEN / CLOSE
+       OPEN / CLOSE MODAL
     ══════════════════════════════════════════ */
     function openModal() {
         Object.keys(modalPending).forEach(function(k){ delete modalPending[k]; });
         var modal = document.getElementById('bookModal');
         var panel = document.getElementById('modalPanel');
-
         modal.style.display = 'block';
         document.body.style.overflow = 'hidden';
-
         fillCategoryFilter();
         document.getElementById('modalStockFilter').value = 'available';
         document.getElementById('bookSearchInput').value  = '';
         filterBooks();
-
-        setTimeout(function () {
-            panel.style.transform = 'scale(1)';
-            panel.style.opacity   = '1';
-        }, 10);
-
-        setTimeout(function () {
-            var inp = document.getElementById('bookSearchInput');
-            if (inp) inp.focus();
-        }, 300);
+        setTimeout(function () { panel.style.transform = 'scale(1)'; panel.style.opacity = '1'; }, 10);
+        setTimeout(function () { document.getElementById('bookSearchInput').focus(); }, 300);
     }
 
     function closeModal() {
         var panel = document.getElementById('modalPanel');
         var modal = document.getElementById('bookModal');
-
         panel.style.transform = 'scale(0.93)';
         panel.style.opacity   = '0';
-
         setTimeout(function () {
             modal.style.display          = 'none';
             document.body.style.overflow = '';
@@ -370,15 +584,12 @@
     function fillCategoryFilter() {
         var sel  = document.getElementById('modalCategoryFilter');
         while (sel.options.length > 1) sel.remove(1);
-
         var seen = {};
         ALL_BOOKS.forEach(function (b) {
             if (b.category && !seen[b.category.id]) {
                 seen[b.category.id] = true;
                 var o = document.createElement('option');
-                o.value       = b.category.id;
-                o.textContent = b.category.name;
-                sel.appendChild(o);
+                o.value = b.category.id; o.textContent = b.category.name; sel.appendChild(o);
             }
         });
     }
@@ -390,27 +601,20 @@
         var q     = document.getElementById('bookSearchInput').value.toLowerCase().trim();
         var catId = document.getElementById('modalCategoryFilter').value;
         var stock = document.getElementById('modalStockFilter').value;
-
         var usedIds = selectedBooks.map(function (b) { return String(b.id); });
-
         var list = ALL_BOOKS.filter(function (b) {
             if (usedIds.indexOf(String(b.id)) !== -1) return false;
-
             var mSearch =
-                (b.name     && b.name.toLowerCase().indexOf(q)     !== -1) ||
-                (b.writer   && b.writer.toLowerCase().indexOf(q)   !== -1) ||
-                (b.barcode  && b.barcode.toLowerCase().indexOf(q)  !== -1) ||
+                (b.name    && b.name.toLowerCase().indexOf(q)    !== -1) ||
+                (b.writer  && b.writer.toLowerCase().indexOf(q)  !== -1) ||
+                (b.barcode && b.barcode.toLowerCase().indexOf(q) !== -1) ||
                 (b.category && b.category.name.toLowerCase().indexOf(q) !== -1);
-
-            var mCat = !catId || (b.category && String(b.category.id) === catId);
-
+            var mCat   = !catId || (b.category && String(b.category.id) === catId);
             var mStock = (stock === '')         ? true
                        : (stock === 'available') ? b.stock > 0
                        :                           b.stock <= 0;
-
             return mSearch && mCat && mStock;
         });
-
         renderGrid(list);
     }
 
@@ -421,76 +625,35 @@
         var grid  = document.getElementById('modalBookGrid');
         var empty = document.getElementById('modalEmptyState');
         var cnt   = document.getElementById('modalResultCount');
-
         var avail = ALL_BOOKS.filter(function(b){
             return selectedBooks.map(function(x){ return String(x.id); }).indexOf(String(b.id)) === -1;
         }).length;
-
         cnt.textContent = 'Menampilkan ' + books.length + ' dari ' + avail + ' buku';
-
-        if (books.length === 0) {
-            grid.innerHTML        = '';
-            empty.style.display   = 'flex';
-            return;
-        }
+        if (books.length === 0) { grid.innerHTML = ''; empty.style.display = 'flex'; return; }
         empty.style.display = 'none';
-
         grid.innerHTML = books.map(function (b) {
             var pend  = !!modalPending[String(b.id)];
             var avail = b.stock > 0;
             var img   = b.image ? '/storage/' + b.image : null;
-
-            var border = pend
-                ? '2px solid #7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,0.2); background:#faf5ff;'
-                : '2px solid #e5e7eb; background:white;';
-
-            var checkBg = pend
-                ? 'background:#7c3aed; border:2px solid #7c3aed;'
-                : 'background:rgba(255,255,255,0.85); border:2px solid #d1d5db;';
-
+            var border = pend ? '2px solid #7c3aed; box-shadow:0 0 0 3px rgba(124,58,237,0.2); background:#faf5ff;' : '2px solid #e5e7eb; background:white;';
+            var checkBg = pend ? 'background:#7c3aed; border:2px solid #7c3aed;' : 'background:rgba(255,255,255,0.85); border:2px solid #d1d5db;';
             var cover = img
                 ? '<img src="' + img + '" alt="' + x(b.name) + '" style="width:100%;height:100%;object-fit:cover;display:block;">'
-                : '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0.5rem;background:linear-gradient(135deg,#f5f3ff,#ede9fe);">'
-                  + '<svg style="width:2rem;height:2rem;stroke:#c4b5fd;fill:none;margin-bottom:4px;" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>'
-                  + '<span style="font-size:9px;color:#a78bfa;text-align:center;line-height:1.3;">' + x(b.name) + '</span>'
-                  + '</div>';
-
-            var habis = !avail
-                ? '<div style="position:absolute;top:6px;left:6px;background:#ef4444;color:white;font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px;z-index:2;">HABIS</div>'
-                : '';
-
-            var catBadge = b.category
-                ? '<span style="font-size:10px;background:#dbeafe;color:#2563eb;font-weight:600;padding:1px 5px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;">' + x(b.category.name) + '</span>'
-                : '<span></span>';
-
+                : '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0.5rem;background:linear-gradient(135deg,#f5f3ff,#ede9fe);"><svg style="width:2rem;height:2rem;stroke:#c4b5fd;fill:none;margin-bottom:4px;" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg><span style="font-size:9px;color:#a78bfa;text-align:center;line-height:1.3;">' + x(b.name) + '</span></div>';
+            var habis = !avail ? '<div style="position:absolute;top:6px;left:6px;background:#ef4444;color:white;font-size:9px;font-weight:700;padding:2px 5px;border-radius:3px;z-index:2;">HABIS</div>' : '';
+            var catBadge = b.category ? '<span style="font-size:10px;background:#dbeafe;color:#2563eb;font-weight:600;padding:1px 5px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;">' + x(b.category.name) + '</span>' : '<span></span>';
             var stockColor = avail ? '#16a34a' : '#ef4444';
             var stockLbl   = avail ? b.stock + ' stok' : 'Habis';
-
             var cursor = avail ? 'cursor:pointer;' : 'cursor:not-allowed;opacity:0.5;';
-
-            return '<div data-id="' + b.id + '"'
-                + ' onclick="' + (avail ? 'window._toggleBook(\'' + b.id + '\')' : '') + '"'
-                + ' style="border-radius:0.75rem; overflow:hidden; border:' + border + ' transition:all 0.18s; ' + cursor + '">'
-
-                // image area
-                + '<div style="position:relative;">'
-                + habis
-                + '<div style="position:absolute;top:6px;right:6px;z-index:2;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.15s;' + checkBg + '">'
-                + '<svg style="width:11px;height:11px;stroke:white;fill:none;opacity:' + (pend?1:0) + ';" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>'
-                + '</div>'
-                + '<div style="aspect-ratio:3/4;overflow:hidden;">' + cover + '</div>'
-                + '</div>'
-
-                // info area
+            return '<div data-id="' + b.id + '" onclick="' + (avail ? 'window._toggleBook(\'' + b.id + '\')' : '') + '" style="border-radius:0.75rem; overflow:hidden; border:' + border + ' transition:all 0.18s; ' + cursor + '">'
+                + '<div style="position:relative;">' + habis
+                + '<div style="position:absolute;top:6px;right:6px;z-index:2;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.15s;' + checkBg + '"><svg style="width:11px;height:11px;stroke:white;fill:none;opacity:' + (pend?1:0) + ';" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg></div>'
+                + '<div style="aspect-ratio:3/4;overflow:hidden;">' + cover + '</div></div>'
                 + '<div style="padding:0.625rem;">'
                 + '<p style="font-size:11.5px;font-weight:700;color:#111827;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin:0 0 3px;">' + x(b.name) + '</p>'
                 + (b.writer ? '<p style="font-size:10.5px;color:#6b7280;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin:0 0 5px;">' + x(b.writer) + '</p>' : '')
-                + '<div style="display:flex;align-items:center;justify-content:space-between;gap:3px;">'
-                + catBadge
-                + '<span style="font-size:10.5px;font-weight:700;color:' + stockColor + ';flex-shrink:0;">' + stockLbl + '</span>'
-                + '</div>'
-                + '</div>'
-                + '</div>';
+                + '<div style="display:flex;align-items:center;justify-content:space-between;gap:3px;">' + catBadge
+                + '<span style="font-size:10.5px;font-weight:700;color:' + stockColor + ';flex-shrink:0;">' + stockLbl + '</span></div></div></div>';
         }).join('');
     }
 
@@ -500,12 +663,9 @@
     window._toggleBook = function (id) {
         var book = ALL_BOOKS.find(function (b) { return String(b.id) === String(id); });
         if (!book || book.stock <= 0) return;
-
         if (modalPending[id]) delete modalPending[id];
         else                   modalPending[id] = book;
-
-        filterBooks();
-        updateFooter();
+        filterBooks(); updateFooter();
     };
 
     /* ══════════════════════════════════════════
@@ -516,15 +676,9 @@
         var tags    = document.getElementById('modalSelectedTags');
         var cntEl   = document.getElementById('modalSelectedCount');
         var pending = Object.values(modalPending);
-
         cntEl.textContent = pending.length;
-
-        if (pending.length === 0) {
-            footer.style.display = 'none';
-            return;
-        }
+        if (pending.length === 0) { footer.style.display = 'none'; return; }
         footer.style.display = 'flex';
-
         tags.innerHTML = pending.map(function (b) {
             return '<span style="display:inline-flex;align-items:center;gap:5px;background:#ede9fe;color:#6d28d9;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:6px;">'
                  + '<span style="max-width:90px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">' + x(b.name) + '</span>'
@@ -534,13 +688,12 @@
     }
 
     /* ══════════════════════════════════════════
-       KONFIRMASI
+       KONFIRMASI MODAL
     ══════════════════════════════════════════ */
     function confirmSelection() {
         var pending = Object.values(modalPending);
         if (pending.length === 0) return;
         pending.forEach(function (b) { addToList(b); });
-        // Clear all keys (tidak reassign variable, hapus tiap key)
         Object.keys(modalPending).forEach(function(k){ delete modalPending[k]; });
         closeModal();
     }
@@ -553,8 +706,7 @@
         selectedBooks.push({ id: book.id, name: book.name, writer: book.writer,
                              stock: book.stock, image: book.image, category: book.category,
                              quantity: 1, index: itemIndex++ });
-        renderList();
-        updateSummary();
+        renderList(); updateSummary();
     }
 
     /* ══════════════════════════════════════════
@@ -563,29 +715,24 @@
     function renderList() {
         var wrap  = document.getElementById('selectedBooksList');
         var empty = document.getElementById('emptySelectedState');
-
-        // Hapus semua child kecuali emptySelectedState
         Array.from(wrap.children).forEach(function(child) {
             if (child.id !== 'emptySelectedState') child.remove();
         });
-
-        if (selectedBooks.length === 0) {
-            if (empty) empty.style.display = 'block';
-            return;
-        }
-
+        if (selectedBooks.length === 0) { if (empty) empty.style.display = 'block'; return; }
         if (empty) empty.style.display = 'none';
-
         selectedBooks.forEach(function (book, i) {
             var el = document.createElement('div');
             el.style.cssText = 'display:flex;align-items:center;gap:1rem;padding:1rem;border-radius:0.75rem;border:2px solid #ddd6fe;background:linear-gradient(135deg,#faf5ff,#eef2ff);';
-
             var cover = book.image
                 ? '<img src="/storage/' + book.image + '" alt="' + x(book.name) + '" style="width:100%;height:100%;object-fit:cover;">'
                 : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f5f3ff,#ede9fe);"><svg style="width:1.5rem;height:1.5rem;stroke:#c4b5fd;fill:none;" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div>';
-
             var catBadge = book.category
                 ? '<span style="font-size:11px;background:#dbeafe;color:#2563eb;font-weight:500;padding:1px 8px;border-radius:9999px;display:inline-block;margin-top:3px;">' + x(book.category.name) + '</span>'
+                : '';
+
+            // Barcode badge
+            var barcodeBadge = book.barcode
+                ? '<span style="font-size:10px;background:#f3f4f6;color:#6b7280;padding:1px 6px;border-radius:4px;font-family:monospace;display:inline-block;margin-top:2px;">' + x(book.barcode) + '</span>'
                 : '';
 
             el.innerHTML =
@@ -593,8 +740,8 @@
               + '<div style="flex:1;min-width:0;">'
               + '<p style="font-weight:700;color:#111827;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin:0 0 2px;">' + x(book.name) + '</p>'
               + '<p style="font-size:13px;color:#6b7280;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin:0;">' + x(book.writer || '-') + '</p>'
-              + catBadge
-              + '<p style="font-size:11.5px;color:#9ca3af;margin:4px 0 0;">Stok: <strong style="color:#16a34a;">' + book.stock + '</strong></p>'
+              + catBadge + barcodeBadge
+              + '<p style="font-size:11.5px;color:#9ca3af;margin:4px 0 0;">Stok tersisa: <strong style="color:#16a34a;">' + book.stock + '</strong></p>'
               + '</div>'
               + '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">'
               + btn('-', 'window._dec(' + i + ')')
@@ -606,7 +753,6 @@
               + '</button>'
               + '<input type="hidden" name="items[' + book.index + '][book_id]" value="' + book.id + '">'
               + '<input type="hidden" name="items[' + book.index + '][quantity]" value="' + book.quantity + '">';
-
             wrap.appendChild(el);
         });
     }
@@ -619,23 +765,20 @@
     }
 
     /* ══════════════════════════════════════════
-       CONTROLS (exposed to window for inline html)
+       CONTROLS
     ══════════════════════════════════════════ */
     window._inc = function (i) {
         if (selectedBooks[i].quantity < selectedBooks[i].stock) {
-            selectedBooks[i].quantity++;
-            renderList(); updateSummary();
+            selectedBooks[i].quantity++; renderList(); updateSummary();
         }
     };
     window._dec = function (i) {
         if (selectedBooks[i].quantity > 1) {
-            selectedBooks[i].quantity--;
-            renderList(); updateSummary();
+            selectedBooks[i].quantity--; renderList(); updateSummary();
         }
     };
     window._remove = function (i) {
-        selectedBooks.splice(i, 1);
-        renderList(); updateSummary();
+        selectedBooks.splice(i, 1); renderList(); updateSummary();
     };
 
     /* ══════════════════════════════════════════
@@ -644,18 +787,15 @@
     function updateSummary() {
         var n = selectedBooks.length;
         var t = selectedBooks.reduce(function (s, b) { return s + b.quantity; }, 0);
-
         document.getElementById('bookCount').textContent         = n;
         document.getElementById('summaryBookCount').textContent  = n;
         document.getElementById('summaryTotalItems').textContent = t;
-
         var bEl = document.querySelector('[name="borrowed_at"]');
         var dEl = document.querySelector('[name="due_at"]');
         if (bEl && dEl && bEl.value && dEl.value) {
             var d = Math.ceil((new Date(dEl.value) - new Date(bEl.value)) / 86400000);
             document.getElementById('summaryDuration').textContent = d > 0 ? d + ' hari' : '-';
         }
-
         var btn = document.getElementById('submitBtn');
         if (n > 0) { btn.disabled = false; btn.classList.remove('opacity-50','cursor-not-allowed'); }
         else        { btn.disabled = true;  btn.classList.add('opacity-50','cursor-not-allowed'); }
@@ -668,7 +808,6 @@
         if (!s) return '';
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
     }
-
 </script>
 
 @endsection

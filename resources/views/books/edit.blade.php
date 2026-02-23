@@ -241,10 +241,8 @@
 <script>
 // Generate random 13-digit barcode (EAN-13 format)
 function generateBarcode() {
-    const timestamp = Date.now().toString();
-    const random = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
-    const barcode = (timestamp + random).slice(-13);
-    document.getElementById('barcode').value = barcode;
+    const random = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+    document.getElementById('barcode').value = 'BK-' + random;
 }
 
 // Preview uploaded image

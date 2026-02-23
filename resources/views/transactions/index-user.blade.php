@@ -1,35 +1,42 @@
 @extends('layouts.app')
 
-@section('title', 'Buku')
+@section('title', 'Dashboard')
 
 @section('content')
-<div class="space-y-6">
-    <!-- Welcome Header -->
-    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-lg p-8 text-white">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold mb-2">Selamat Datang, {{ Auth::user()->name ?? 'User' }}! 👋</h1>
-                <p class="text-blue-100">Selamat datang kembali di Perpustakaan Digital</p>
+<div class="min-h-screen bg-gray-50">
+    {{-- Success Message --}}
+    @if (session('success'))
+        <div class="mb-6 bg-green-50 border-l-4 border-green-500 rounded-lg p-4 shadow-md animate-fade-in">
+            <div class="flex items-center">
+                <svg class="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <p class="text-green-800 font-medium">{{ session('success') }}</p>
             </div>
-            <div class="hidden md:block">
-                <div class="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                    </svg>
+        </div>
+    @endif
+
+    {{-- Hero Banner --}}
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-12 mb-6 rounded-xl shadow-xl">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold mb-2">Halo, {{ auth()->user()->name }}! 👋</h1>
+                    <p class="text-blue-100 text-lg">Selamat datang di Perpustakaan Digital</p>
+                </div>
+                <div class="hidden md:block">
+                    <div class="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                        <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     @php
-        $user = Auth::user();
-
-        $activeTransactions = $user->transactions()
-            ->with(['items.book.category'])
-            ->whereIn('status', ['borrowed', 'return_requested'])
-            ->latest()
-            ->take(3)
-            ->get();
+        $user = auth()->user();
 
         $activeLoansCount = $user->transactions()
             ->whereIn('status', ['borrowed', 'return_requested'])
@@ -41,15 +48,61 @@
             ->where('status', 'unpaid')
             ->count();
 
+        $unpaidFinesAmount = \App\Models\Fine::whereHas('transaction', fn($q) => $q->where('user_id', $user->id))
+            ->where('status', 'unpaid')
+            ->sum('amount');
+
         $totalBorrowed = $user->transactions()->count();
 
         $hasActiveFine = \App\Models\Fine::whereHas('transaction', fn($q) => $q->where('user_id', $user->id))
             ->whereIn('status', ['unpaid', 'pending_confirmation'])
             ->exists();
+
+        // Transaksi aktif (max 3 untuk preview)
+        $activeTransactions = $user->transactions()
+            ->with(['items.book.category'])
+            ->whereIn('status', ['borrowed', 'return_requested'])
+            ->latest()
+            ->take(3)
+            ->get();
+
+        // Wishlist (max 4 untuk preview)
+        $wishlists          = $user->wishlists()->with('book.category')->latest()->take(4)->get();
+        $totalWishlists     = $user->wishlists()->count();
+        $availableWishlists = $wishlists->filter(fn($w) => ($w->book->stock ?? 0) > 0)->count();
+        $uniqueCategories   = $wishlists->pluck('book.category_id')->filter()->unique()->count();
+
+        // Personalized recommendations
+        $personalizedBooks = app(\App\Contracts\Repositories\AlgorithmRepository::class)
+            ->personalized($user->id, 6);
+
+        // Buku terbaru
+        $recentBooks = \App\Models\Book::with('category')->latest()->take(8)->get();
     @endphp
 
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    {{-- Fine Warning Banner --}}
+    @if($hasActiveFine)
+    <div class="bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 rounded-xl p-5 mb-6 shadow-md">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <svg class="h-6 w-6 text-red-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div>
+                    <p class="font-semibold text-red-800">Peminjaman Ditangguhkan</p>
+                    <p class="text-sm text-red-600">Anda memiliki denda yang belum dibayar. Lunasi untuk bisa meminjam buku baru.</p>
+                </div>
+            </div>
+            <a href="{{ route('fines.index') }}" class="flex-shrink-0 ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-all">
+                Bayar Denda
+            </a>
+        </div>
+    </div>
+    @endif
+
+    {{-- Statistics Cards --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
         <a href="{{ route('transactions.history') }}" class="block bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
@@ -85,10 +138,12 @@
                 <div>
                     <p class="text-sm font-semibold text-gray-600 mb-1">Denda Belum Terbayar</p>
                     <p class="text-3xl font-bold {{ $pendingFines > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ $pendingFines }}</p>
-                    <p class="text-xs text-gray-500 mt-1">Perlu dibayar</p>
+                    <p class="text-xs {{ $pendingFines > 0 ? 'text-red-400' : 'text-gray-500' }} mt-1">
+                        {{ $pendingFines > 0 ? 'Rp ' . number_format($unpaidFinesAmount, 0, ',', '.') : 'Tidak ada denda' }}
+                    </p>
                 </div>
-                <div class="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center">
-                    <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-14 h-14 {{ $pendingFines > 0 ? 'bg-amber-100' : 'bg-gray-100' }} rounded-xl flex items-center justify-center">
+                    <svg class="w-8 h-8 {{ $pendingFines > 0 ? 'text-amber-600' : 'text-gray-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </div>
@@ -111,13 +166,13 @@
         </a>
     </div>
 
-    <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    {{-- Main Content Grid --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
-        <!-- Left Column (2/3) -->
+        {{-- Left Column (2/3) --}}
         <div class="lg:col-span-2 space-y-6">
 
-            <!-- Peminjaman Aktif -->
+            {{-- Peminjaman Aktif --}}
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <div class="flex items-center justify-between mb-6">
                     <div class="flex items-center space-x-3">
@@ -144,7 +199,7 @@
                     <div class="space-y-4">
                         @foreach($activeTransactions as $transaction)
                             @php
-                                $items = $transaction->items;
+                                $items     = $transaction->items;
                                 $isOverdue = $transaction->due_at && \Carbon\Carbon::parse($transaction->due_at)->isPast();
                             @endphp
                             <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border-2 {{ $isOverdue ? 'border-red-300' : 'border-blue-200' }} hover:shadow-md transition-all">
@@ -202,41 +257,25 @@
                         </svg>
                         <h4 class="text-lg font-bold text-gray-900 mb-2">Tidak Ada Peminjaman Aktif</h4>
                         <p class="text-gray-500 mb-4">Mulai pinjam buku dari koleksi kami</p>
-                        {{-- ✅ Diganti ke books.catalog --}}
-                        <a href="{{ route('books.catalog') }}"
-                            class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 shadow-md transition-all">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
-                            Jelajahi Buku
-                        </a>
+                        @if(!$hasActiveFine)
+                            <a href="{{ route('books.index') }}"
+                                class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 shadow-md transition-all">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                                Jelajahi Buku
+                            </a>
+                        @else
+                            <a href="{{ route('fines.index') }}"
+                                class="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 shadow-md transition-all">
+                                Bayar Denda Dahulu
+                            </a>
+                        @endif
                     </div>
                 @endif
             </div>
 
-            <!-- Wishlist -->
-            @php
-                $wishlistsQuery = $user->wishlists()
-                    ->with(['book.category'])
-                    ->latest();
-
-                $wishlists = $wishlistsQuery->take(4)->get();
-
-                $totalWishlists = $wishlistsQuery->count();
-
-                $availableWishlists = $wishlists
-                    ->filter(function ($wishlist) {
-                        return optional($wishlist->book)->stock > 0;
-                    })
-                    ->count();
-
-                $uniqueCategories = $wishlists
-                    ->pluck('book.category_id')
-                    ->filter()
-                    ->unique()
-                    ->count();
-            @endphp
-
+            {{-- Wishlist --}}
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <div class="flex items-center justify-between mb-6">
                     <div class="flex items-center space-x-3">
@@ -302,7 +341,6 @@
                                             </div>
                                         </div>
                                     </a>
-                                    {{-- ✅ Sembunyikan tombol Pinjam jika ada denda aktif --}}
                                     @if($book->stock > 0 && !$hasActiveFine)
                                         <a href="{{ route('transactions.create', ['book_id' => $book->id]) }}"
                                             class="absolute bottom-3 left-3 right-3 bg-green-500 hover:bg-green-600 text-white text-xs font-semibold py-2 rounded-lg shadow opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-1">
@@ -331,8 +369,7 @@
                         </div>
                         <h4 class="text-lg font-bold text-gray-900 mb-2">Wishlist Masih Kosong</h4>
                         <p class="text-gray-500 mb-4">Tambahkan buku favorit Anda ke wishlist</p>
-                        {{-- ✅ Diganti ke books.catalog --}}
-                        <a href="{{ route('books.catalog') }}"
+                        <a href="{{ route('books.index') }}"
                             class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-600 to-rose-600 text-white rounded-lg font-semibold shadow-md transition-all">
                             Jelajahi Koleksi Buku
                         </a>
@@ -341,30 +378,48 @@
             </div>
         </div>
 
-        <!-- Right Column (1/3) -->
+        {{-- Right Column (1/3) --}}
         <div class="space-y-6">
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h3 class="text-lg font-bold text-gray-900 mb-4">Aksi Cepat</h3>
                 <div class="space-y-3">
-                    {{-- ✅ Cari Buku → books.catalog --}}
-                    <a href="{{ route('books.catalog') }}" class="flex items-center space-x-3 p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group">
+                    <a href="{{ route('books.index') }}" class="flex items-center space-x-3 p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group">
                         <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </div>
                         <div><p class="font-semibold text-gray-900">Cari Buku</p><p class="text-xs text-gray-500">Jelajahi koleksi</p></div>
                     </a>
+
+                    @if($hasActiveFine)
+                        <a href="{{ route('fines.index') }}" class="flex items-center space-x-3 p-3 bg-red-50 hover:bg-red-100 rounded-lg transition-colors group border border-red-100">
+                            <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            </div>
+                            <div><p class="font-semibold text-red-700">Bayar Denda</p><p class="text-xs text-red-400">Peminjaman ditangguhkan</p></div>
+                        </a>
+                    @else
+                        <a href="{{ route('transactions.create') }}" class="flex items-center space-x-3 p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors group">
+                            <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                            </div>
+                            <div><p class="font-semibold text-gray-900">Pinjam Buku</p><p class="text-xs text-gray-500">Buat peminjaman baru</p></div>
+                        </a>
+                    @endif
+
                     <a href="{{ route('wishlist.index') }}" class="flex items-center space-x-3 p-3 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors group">
                         <div class="w-10 h-10 bg-pink-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                             <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                         </div>
                         <div><p class="font-semibold text-gray-900">Wishlist</p><p class="text-xs text-gray-500">Buku favorit</p></div>
                     </a>
+
                     <a href="{{ route('transactions.history') }}" class="flex items-center space-x-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors group">
                         <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
                         <div><p class="font-semibold text-gray-900">Riwayat</p><p class="text-xs text-gray-500">Lihat peminjaman</p></div>
                     </a>
+
                     <a href="{{ route('fines.index') }}" class="flex items-center space-x-3 p-3 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors group">
                         <div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -393,10 +448,62 @@
         </div>
     </div>
 
-    <!-- Buku Terbaru -->
-    @php
-        $recentBooks = \App\Models\Book::with('category')->latest()->take(8)->get();
-    @endphp
+    {{-- Personalized Recommendations --}}
+    @if($personalizedBooks->isNotEmpty())
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-md">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900">Rekomendasi Untuk Anda</h2>
+                    <p class="text-sm text-gray-500">Berdasarkan riwayat peminjaman</p>
+                </div>
+            </div>
+            <a href="{{ route('books.index') }}" class="text-purple-600 hover:text-purple-700 text-sm font-medium">Lihat Semua →</a>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            @foreach($personalizedBooks as $recBook)
+            <div class="group relative">
+                <a href="{{ route('books.show', $recBook->slug) }}" class="block">
+                    <div class="rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-1 border-2 border-gray-100 hover:border-purple-300">
+                        <div class="aspect-[3/4] bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center overflow-hidden relative">
+                            @if($recBook->image)
+                                <img src="{{ asset('storage/' . $recBook->image) }}" alt="{{ $recBook->name }}" class="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300">
+                            @else
+                                <svg class="w-12 h-12 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                            @endif
+                            <div class="absolute top-2 right-2">
+                                <span class="text-xs {{ $recBook->stock > 0 ? 'bg-green-500' : 'bg-red-500' }} text-white px-2 py-0.5 rounded-full font-medium">
+                                    {{ $recBook->stock > 0 ? 'Ada' : 'Habis' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-white">
+                            <h3 class="text-sm font-medium text-gray-900 line-clamp-2 mb-1 group-hover:text-purple-600">{{ $recBook->name }}</h3>
+                            <p class="text-xs text-gray-500">{{ $recBook->category?->name ?? 'Uncategorized' }}</p>
+                        </div>
+                    </div>
+                </a>
+                @if($recBook->stock > 0 && !$hasActiveFine)
+                    <a href="{{ route('transactions.create', ['book_id' => $recBook->id]) }}"
+                        class="absolute bottom-3 left-3 right-3 bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold py-2 rounded-lg shadow opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                        Pinjam
+                    </a>
+                @endif
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    {{-- Buku Terbaru --}}
     <div class="bg-white rounded-xl shadow-lg p-6">
         <div class="flex items-center justify-between mb-6">
             <div class="flex items-center space-x-3">
@@ -410,12 +517,9 @@
                     <p class="text-sm text-gray-500">Koleksi terbaru perpustakaan</p>
                 </div>
             </div>
-            {{-- ✅ Diganti ke books.catalog --}}
-            <a href="{{ route('books.catalog') }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all flex items-center space-x-2">
+            <a href="{{ route('books.index') }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-all flex items-center space-x-2">
                 <span>Lihat Semua</span>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </a>
         </div>
 
@@ -457,7 +561,6 @@
                                 </div>
                             </div>
                         </a>
-                        {{-- ✅ Sembunyikan tombol Pinjam jika ada denda aktif --}}
                         @if($book->stock > 0 && !$hasActiveFine)
                             <a href="{{ route('transactions.create', ['book_id' => $book->id]) }}"
                                 class="absolute bottom-3 left-3 right-3 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold py-2 rounded-lg shadow opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-1">
@@ -481,5 +584,6 @@
             </div>
         @endif
     </div>
+
 </div>
 @endsection

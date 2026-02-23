@@ -30,7 +30,7 @@ class Book extends Model
     }
     public function wishlists()
     {
-        return $this->hasMany(Wishlist::class);
+        return $this->belongsTo(Book::class);
     }
     public function views(){
         return $this->hasMany(Algorithm::class);

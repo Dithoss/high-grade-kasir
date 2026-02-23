@@ -162,15 +162,14 @@ class AuthController extends Controller
         try {
             $user = $this->authHandler->storeCustomer($request->validated());
 
-            $user->assignRole($request->role);
-
             return redirect()
                 ->route('users.index')
                 ->with('success', __('alert.add_success'));
         } catch (\Throwable $e) {
-        dd($e->getMessage(), $e->getTraceAsString());
-        }   
-
+            return back()
+                ->withErrors('Gagal menambahkan user: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
 

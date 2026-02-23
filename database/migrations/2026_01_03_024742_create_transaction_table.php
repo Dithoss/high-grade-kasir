@@ -18,9 +18,9 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->enum('status', ['borrowed', 'return_requested', 'returned', 'late', 'lost', 'damaged'])->default('borrowed');
             $table->string('receipt_number')->unique();
-            $table->date('borrowed_at')->index();
-            $table->date('due_at')->nullable()->index();
-            $table->date('returned_at')->nullable()->index();
+            $table->datetime('borrowed_at')->index();
+            $table->datetime('due_at')->nullable()->index();
+            $table->datetime('returned_at')->nullable()->index();
             $table->timestamps();
         });
     }

@@ -122,13 +122,28 @@ class UserHandler
 
     public function storeCustomer(array $data)
     {
-        if (isset($data['image']) && $data['image']) {
-            $imagePath = UploadHelper::uploadImage($data['image'], 'profile_images');
-            $data['image'] = $imagePath;
-        }
+        DB::beginTransaction();
+        try {
+            if (isset($data['image']) && $data['image']) {
+                $imagePath = UploadHelper::uploadImage($data['image'], 'profile_images');
+                $data['image'] = $imagePath;
+            }
 
-        $user = $this->authInterface->store($data);
-        return $user;
+            $user = $this->authInterface->store($data);
+            
+            // ✅ TAMBAHKAN: Assign role berdasarkan input atau default ke 'user'
+            if (isset($data['role'])) {
+                $this->assignRole($user, $data['role']);
+            } else {
+                $this->assignRole($user, UserRole::USER);
+            }
+
+            DB::commit();
+            return $user;
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
     }
 
     public function updateCustomer(string $id, array $data)
