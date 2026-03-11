@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Contracts\Interface\FineInterface;
 use App\Models\Fine;
+use App\Services\StripeService;
 use App\Services\TripayService;
 use Illuminate\Http\Request;
 
@@ -13,11 +14,14 @@ class FineController extends Controller
         protected FineInterface $fineRepository
     ) {}
 
-    public function index()
+   public function index()
     {
         $fines = $this->fineRepository->getByUser(auth()->id());
-
-        return view('fines.index', compact('fines'));
+        $unpaidFinesAmount = $fines->where('status', 'unpaid')->sum('amount');
+        $paidTotal = $fines->where('status', 'paid')->sum('amount');
+        $unpaidTotal = $unpaidFinesAmount; // used in the alert banner
+        
+        return view('fines.index', compact('fines', 'unpaidFinesAmount', 'unpaidTotal', 'paidTotal'));
     }
 
     public function adminIndex(Request $request)
@@ -41,54 +45,26 @@ class FineController extends Controller
     }
 
     public function pay(Request $request, Fine $fine)
-    {
-        if ($fine->transaction->user_id !== auth()->id()) {
-            return back()->with('error', 'Anda tidak memiliki akses untuk membayar denda ini.');
-        }
-
-        if ($fine->status === 'paid') {
-            return back()->with('info', 'Denda sudah lunas.');
-        }
-
-        if ($fine->status === 'pending_confirmation') {
-            return back()->with('info', 'Pembayaran Anda sedang menunggu konfirmasi admin.');
-        }
-
-        $request->validate([
-            'payment_method' => 'required|in:cash,tripay'
-        ]);
-
-        if ($request->payment_method === 'cash') {
-            $fine->update([
-                'payment_method' => 'cash',
-                'status' => 'pending_confirmation',
-                'payment_requested_at' => now(),
-            ]);
-
-            return back()->with('success', 'Permintaan pembayaran offline berhasil. Silakan bayar di perpustakaan dan menunggu konfirmasi admin.');
-        }
-
-        try {
-            $tripayService = app(TripayService::class);
-            $tripayResponse = $tripayService->createTransaction($fine);
-
-            $fine->update([
-                'payment_method' => 'tripay',
-                'payment_reference' => $tripayResponse['reference'] ?? null,
-            ]);
-
-            if (isset($tripayResponse['checkout_url'])) {
-                return redirect($tripayResponse['checkout_url']);
-            }
-
-            return back()->with('error', 'Gagal membuat transaksi pembayaran. Silakan coba lagi.');
-            
-        } catch (\Exception $e) {
-            \Log::error('Tripay Payment Error: ' . $e->getMessage());
-            
-            return back()->with('error', 'Terjadi kesalahan saat memproses pembayaran: ' . $e->getMessage());
-        }
+{
+    if ($fine->transaction->user_id !== auth()->id()) {
+        return back()->with('error', 'Anda tidak memiliki akses untuk membayar denda ini.');
     }
+
+    if ($fine->status === 'paid') {
+        return back()->with('info', 'Denda sudah lunas.');
+    }
+
+    if ($fine->status === 'pending_confirmation') {
+        return back()->with('info', 'Pembayaran Anda sedang menunggu konfirmasi admin.');
+    }
+
+    $request->validate([
+        'payment_method' => 'required|in:cash,stripe'
+    ]);
+
+    // Delegasi ke CheckoutController
+    return app(CheckoutController::class)->pay($request, $fine);
+}
 
     public function confirmPayment(Fine $fine)
     {

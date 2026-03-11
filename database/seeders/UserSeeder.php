@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -27,8 +26,14 @@ class UserSeeder extends Seeder
             if (! $user->hasRole($roleName)) {
                 $user->assignRole($roleName);
             }
+
+            if (! $user->libraryCard()->exists()) {
+                $user->libraryCard()->create([
+                    'card_number' => 'CARD-' . strtoupper(Str::random(8)),
+                    'expired_at' => now()->addYears(3),
+                    'status' => 'active',
+                ]);
+            }
         }
     }
 }
-
-

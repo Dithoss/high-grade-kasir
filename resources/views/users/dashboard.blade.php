@@ -34,7 +34,6 @@
     </div>
 
     @php
-        // Hitung semua stat di satu tempat, akurat dari DB langsung
         $totalBooks      = \App\Models\Book::count();
         $totalCategories = \App\Models\Category::count();
 
@@ -53,13 +52,25 @@
             })
             ->whereIn('status', ['unpaid', 'pending_confirmation'])
             ->exists();
+
+        // ── KATEGORI BANNER ──────────────────────────────────────────
+        $bannerCategories = \App\Models\Category::withCount('books')
+            ->orderByDesc('books_count')
+            ->take(8)
+            ->get();
+
+        $activeCategoryId = request('category_id');
+
+        // Buku terbaru — ikut filter kategori jika ada
+        $recentBooks = \App\Models\Book::latest()
+            ->when($activeCategoryId, fn($q) => $q->where('category_id', $activeCategoryId))
+            ->take(6)
+            ->get();
     @endphp
 
     <div class="">
         {{-- Quick Stats Cards --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-
-            {{-- Total Books --}}
             <a href="{{ route('books.index') }}" class="block bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all">
                 <div class="flex items-center justify-between">
                     <div>
@@ -75,7 +86,6 @@
                 <p class="text-xs text-blue-500 mt-2">Lihat semua buku →</p>
             </a>
 
-            {{-- Total Categories --}}
             <a href="{{ route('categories.index') }}" class="block bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md hover:border-purple-200 transition-all">
                 <div class="flex items-center justify-between">
                     <div>
@@ -91,7 +101,6 @@
                 <p class="text-xs text-purple-500 mt-2">Lihat semua kategori →</p>
             </a>
 
-            {{-- Currently Borrowed --}}
             <a href="{{ route('transactions.index') }}" class="block bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all">
                 <div class="flex items-center justify-between">
                     <div>
@@ -107,7 +116,6 @@
                 <p class="text-xs text-blue-500 mt-2">Lihat transaksi →</p>
             </a>
 
-            {{-- Total Unpaid Fines --}}
             <a href="{{ route('fines.index') }}" class="block bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md {{ $unpaidFines > 0 ? 'hover:border-red-200' : 'hover:border-green-200' }} transition-all">
                 <div class="flex items-center justify-between">
                     <div>
@@ -128,7 +136,7 @@
             </a>
         </div>
 
-        {{-- Fine Warning Banner (jika ada denda aktif) --}}
+        {{-- Fine Warning Banner --}}
         @if($hasActiveFine)
         <div class="bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 rounded-xl p-5 mb-8 shadow-md">
             <div class="flex items-center justify-between">
@@ -148,6 +156,116 @@
         </div>
         @endif
 
+        {{-- ════════════════════════════════════════════════════════════
+            CATEGORY BANNER — Sisip di sini, sebelum Rekomendasi
+        ════════════════════════════════════════════════════════════ --}}
+        @if($bannerCategories->count() > 0)
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-5 mb-8">
+
+            {{-- Header --}}
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-gray-900">Telusuri Kategori</h2>
+                        <p class="text-xs text-gray-400">Klik banner untuk filter buku di bawah</p>
+                    </div>
+                </div>
+                @if($activeCategoryId)
+                    <a href="{{ route('dashboard') }}"
+                       class="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold rounded-lg transition-all">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Reset Filter
+                    </a>
+                @else
+                    <a href="{{ route('categories.index') }}" class="text-xs text-purple-600 hover:underline font-medium">
+                        Semua Kategori →
+                    </a>
+                @endif
+            </div>
+
+            {{-- Banner Grid --}}
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+                @foreach($bannerCategories as $cat)
+                    @php
+                        $color    = $cat->color ?: 'from-blue-500 to-indigo-600';
+                        $isActive = (string)$activeCategoryId === (string)$cat->id;
+                    @endphp
+                    <a href="{{ $isActive ? route('dashboard') : route('dashboard', ['category_id' => $cat->id]) }}"
+                       class="group relative rounded-xl overflow-hidden shadow-sm transition-all duration-300
+                           {{ $isActive
+                               ? 'ring-[3px] ring-purple-500 ring-offset-1 shadow-md scale-[1.04]'
+                               : 'hover:shadow-md hover:-translate-y-0.5 hover:scale-[1.02]' }}">
+
+                        <div class="relative h-20 sm:h-24">
+                            {{-- Gambar atau gradient fallback --}}
+                            @if($cat->image)
+                                <img src="{{ asset('storage/' . $cat->image) }}"
+                                     alt="{{ $cat->name }}"
+                                     class="w-full h-full object-cover transition-transform duration-500
+                                         {{ $isActive ? 'scale-110' : 'group-hover:scale-110' }}">
+                                <div class="absolute inset-0 bg-gradient-to-t
+                                    {{ $isActive ? 'from-purple-900/75 via-black/20' : 'from-black/65 via-black/10' }} to-transparent">
+                                </div>
+                            @else
+                                <div class="w-full h-full bg-gradient-to-br {{ $color }} flex items-center justify-center">
+                                    <span class="text-4xl font-black text-white/15 select-none leading-none">
+                                        {{ strtoupper(substr($cat->name, 0, 2)) }}
+                                    </span>
+                                </div>
+                                <div class="absolute inset-0 bg-gradient-to-t
+                                    {{ $isActive ? 'from-purple-900/60' : 'from-black/50' }} to-transparent">
+                                </div>
+                            @endif
+
+                            {{-- Centang aktif --}}
+                            @if($isActive)
+                                <div class="absolute top-1.5 right-1.5">
+                                    <div class="w-4 h-4 bg-white rounded-full flex items-center justify-center shadow">
+                                        <svg class="w-2.5 h-2.5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Label bawah --}}
+                            <div class="absolute bottom-0 left-0 right-0 px-2 pb-2">
+                                <p class="text-white font-bold text-xs leading-tight line-clamp-1 drop-shadow">
+                                    {{ $cat->name }}
+                                </p>
+                                <p class="text-white/60 text-xs">{{ $cat->books_count }} buku</p>
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+
+            {{-- Info bar filter aktif --}}
+            @if($activeCategoryId)
+                @php $activecat = $bannerCategories->firstWhere('id', $activeCategoryId); @endphp
+                @if($activecat)
+                <div class="mt-3 flex items-center gap-2 px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg text-sm">
+                    <svg class="w-3.5 h-3.5 text-purple-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/>
+                    </svg>
+                    <span class="text-purple-700 text-xs">
+                        Menampilkan buku kategori <strong>{{ $activecat->name }}</strong>
+                    </span>
+                    <span class="ml-auto text-xs text-purple-400">{{ $recentBooks->count() }} buku</span>
+                </div>
+                @endif
+            @endif
+        </div>
+        @endif
+        {{-- ════════════════════════════════════════════════════════════ --}}
+
         {{-- Personalized Recommendations --}}
         @php
             $personalizedBooks = app(\App\Contracts\Repositories\AlgorithmRepository::class)
@@ -163,7 +281,7 @@
                     </svg>
                     Rekomendasi Untuk Anda
                 </h2>
-                <a href="{{ route('books.index') }}" class="text-purple-600 hover:text-purple-700 text-sm font-medium">
+                <a href="{{ route('books.catalog') }}" class="text-purple-600 hover:text-purple-700 text-sm font-medium">
                     Lihat Semua →
                 </a>
             </div>
@@ -209,7 +327,7 @@
             </h2>
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <a href="{{ route('books.index') }}" 
+                <a href="{{ route('books.index') }}"
                    class="group flex flex-col items-center p-4 rounded-lg hover:bg-blue-50 transition-colors border border-gray-100">
                     <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,8 +338,7 @@
                 </a>
 
                 @if($hasActiveFine)
-                    {{-- Jika ada denda, tombol pinjam mengarah ke fines dulu --}}
-                    <a href="{{ route('fines.index') }}" 
+                    <a href="{{ route('fines.index') }}"
                        class="group flex flex-col items-center p-4 rounded-lg hover:bg-red-50 transition-colors border border-red-100 bg-red-50/50">
                         <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-red-200 transition-colors">
                             <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,7 +349,7 @@
                         <span class="text-xs text-red-400 mt-1">Peminjaman ditangguhkan</span>
                     </a>
                 @else
-                    <a href="{{ route('transactions.create') }}" 
+                    <a href="{{ route('transactions.create') }}"
                        class="group flex flex-col items-center p-4 rounded-lg hover:bg-blue-50 transition-colors border border-gray-100">
                         <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
                             <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -243,7 +360,7 @@
                     </a>
                 @endif
 
-                <a href="{{ route('transactions.index') }}" 
+                <a href="{{ route('transactions.index') }}"
                    class="group flex flex-col items-center p-4 rounded-lg hover:bg-blue-50 transition-colors border border-gray-100">
                     <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-blue-200 transition-colors">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -253,7 +370,7 @@
                     <span class="text-sm font-medium text-gray-700 group-hover:text-blue-600">Riwayat Pinjam</span>
                 </a>
 
-                <a href="{{ route('categories.index') }}" 
+                <a href="{{ route('categories.index') }}"
                    class="group flex flex-col items-center p-4 rounded-lg hover:bg-purple-50 transition-colors border border-gray-100">
                     <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-purple-200 transition-colors">
                         <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -266,17 +383,22 @@
         </div>
 
         {{-- Recent Books Section --}}
+        {{-- Judul berubah sesuai filter --}}
         <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-bold text-gray-900">Buku Terbaru</h2>
-                <a href="{{ route('books.index') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                <h2 class="text-xl font-bold text-gray-900">
+                    @if($activeCategoryId)
+                        @php $activecat = $bannerCategories->firstWhere('id', $activeCategoryId); @endphp
+                        Buku &mdash; <span class="text-purple-600">{{ $activecat?->name }}</span>
+                    @else
+                        Buku Terbaru
+                    @endif
+                </h2>
+                <a href="{{ route('books.catalog', $activeCategoryId ? ['category_id' => $activeCategoryId] : []) }}"
+                   class="text-blue-600 hover:text-blue-700 text-sm font-medium">
                     Lihat Semua →
                 </a>
             </div>
-
-            @php
-                $recentBooks = \App\Models\Book::latest()->take(6)->get();
-            @endphp
 
             @if($recentBooks->count() > 0)
                 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -308,11 +430,12 @@
                     @endforeach
                 </div>
             @else
-                <div class="text-center py-8">
+                <div class="text-center py-12">
                     <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                     </svg>
-                    <p class="text-gray-500">Belum ada buku tersedia</p>
+                    <p class="text-gray-500 mb-2">Belum ada buku di kategori ini</p>
+                    <a href="{{ route('dashboard') }}" class="text-sm text-blue-600 hover:underline">← Tampilkan semua</a>
                 </div>
             @endif
         </div>

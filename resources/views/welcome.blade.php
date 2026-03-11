@@ -122,9 +122,11 @@
                     <a href="/login" class="px-6 py-2.5 text-indigo-600 hover:text-indigo-700 font-semibold transition">
                         Masuk
                     </a>
+                    @if($settings->isRegistrationOpen())
                     <a href="/register" class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-xl transform hover:scale-105 transition">
                         Daftar Sekarang
                     </a>
+                    @endif
                 </div>
             </div>
         </div>

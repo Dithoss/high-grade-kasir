@@ -343,6 +343,7 @@
                 @if($transaction->canBeExtended())
                     <form action="{{ route('transactions.request-extend', $transaction->id) }}" method="POST">
                         @csrf
+                        @if($settings->isPreorderEnabled())
                         <button type="submit" 
                                 class="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all"
                                 onclick="return confirm('Ajukan perpanjangan peminjaman?')">
@@ -351,6 +352,7 @@
                             </svg>
                             Ajukan Perpanjangan
                         </button>
+                        @endif
                     </form>
                 @elseif($transaction->hasPendingExtension())
                     <div class="w-full py-3 bg-yellow-100 text-yellow-700 text-center rounded-lg font-semibold border-2 border-yellow-300 flex items-center justify-center">

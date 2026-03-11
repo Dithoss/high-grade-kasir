@@ -28,7 +28,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'image'
+        'image',
+        'phone_number'
     ];
     protected $guard_name = 'web';
 
@@ -71,5 +72,9 @@ class User extends Authenticatable
     public function wishlists()
     {
         return $this->hasMany(Wishlist::class);
+    }
+    public function libraryCard()
+    {
+        return $this->hasOne(LibraryCard::class);
     }
 }

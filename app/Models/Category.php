@@ -12,7 +12,7 @@ class Category extends Model
 {
     use HasFactory, Notifiable, HasUuids, SoftDeletes;
     protected $fillable= [
-        'name'
+        'name','image'
     ];
     public function books(){
         return $this->hasMany(Book::class);

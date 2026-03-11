@@ -8,4 +8,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 Schedule::command('model:prune')->daily();
 Schedule::command('library:check-due')->everyMinute();
+Schedule::command('library-cards:expire')->daily();
 

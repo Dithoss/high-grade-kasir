@@ -19,13 +19,23 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('transactions.store') }}" id="transactionForm">
+    {{--
+        PENTING:
+        - Admin  → route('transactions.store.admin') → storeAdmin() → pakai StoreTransactionAdmin (include user_id)
+        - User   → route('transactions.store')       → store()      → user_id diisi otomatis dari auth()->id()
+    --}}
+    @role('admin')
+        <form method="POST" action="{{ route('transactions.store.admin') }}" id="transactionForm">
+    @else
+        <form method="POST" action="{{ route('transactions.store') }}" id="transactionForm">
+    @endrole
         @csrf
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             <!-- Left Column -->
             <div class="lg:col-span-2 space-y-6">
 
+                {{-- Pilih Peminjam — hanya tampil untuk admin --}}
                 @role('admin')
                 <div class="bg-white rounded-xl shadow-md p-6">
                     <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -38,13 +48,15 @@
                         class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none @error('user_id') border-red-500 @enderror"
                         required>
                         <option value="">-- Pilih Member --</option>
-                        @foreach(\App\Models\User::whereHas('roles', fn($q) => $q->where('name', 'user'))->get() as $user)
+                        @foreach($users as $user)
                             <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>
                                 {{ $user->name }} ({{ $user->email }})
                             </option>
                         @endforeach
                     </select>
-                    @error('user_id')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                    @error('user_id')
+                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
                 @endrole
 
@@ -279,31 +291,18 @@
     /* ── WAIT DOM ── */
     document.addEventListener('DOMContentLoaded', function () {
 
-        /* Tombol buka modal */
         document.getElementById('btnOpenModal').addEventListener('click', openModal);
-
-        /* Tombol tutup (X) */
         document.getElementById('btnCloseModal').addEventListener('click', closeModal);
-
-        /* Klik backdrop */
         document.getElementById('modalBackdrop').addEventListener('click', closeModal);
-
-        /* Konfirmasi — juga expose ke window agar inline onclick bisa akses */
         document.getElementById('btnConfirmModal').addEventListener('click', confirmSelection);
-
-        /* Search */
         document.getElementById('bookSearchInput').addEventListener('input', filterBooks);
-
-        /* Filter kategori & stok */
         document.getElementById('modalCategoryFilter').addEventListener('change', filterBooks);
         document.getElementById('modalStockFilter').addEventListener('change', filterBooks);
 
-        /* ESC */
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') closeModal();
         });
 
-        /* Update durasi saat tanggal berubah */
         var borrow = document.querySelector('[name="borrowed_at"]');
         var due    = document.querySelector('[name="due_at"]');
         if (borrow) borrow.addEventListener('change', updateSummary);
@@ -404,7 +403,7 @@
 
             var mCat = !catId || (b.category && String(b.category.id) === catId);
 
-            var mStock = (stock === '')         ? true
+            var mStock = (stock === '')          ? true
                        : (stock === 'available') ? b.stock > 0
                        :                           b.stock <= 0;
 
@@ -472,7 +471,6 @@
                 + ' onclick="' + (avail ? 'window._toggleBook(\'' + b.id + '\')' : '') + '"'
                 + ' style="border-radius:0.75rem; overflow:hidden; border:' + border + ' transition:all 0.18s; ' + cursor + '">'
 
-                // image area
                 + '<div style="position:relative;">'
                 + habis
                 + '<div style="position:absolute;top:6px;right:6px;z-index:2;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.15s;' + checkBg + '">'
@@ -481,7 +479,6 @@
                 + '<div style="aspect-ratio:3/4;overflow:hidden;">' + cover + '</div>'
                 + '</div>'
 
-                // info area
                 + '<div style="padding:0.625rem;">'
                 + '<p style="font-size:11.5px;font-weight:700;color:#111827;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin:0 0 3px;">' + x(b.name) + '</p>'
                 + (b.writer ? '<p style="font-size:10.5px;color:#6b7280;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin:0 0 5px;">' + x(b.writer) + '</p>' : '')
@@ -540,7 +537,6 @@
         var pending = Object.values(modalPending);
         if (pending.length === 0) return;
         pending.forEach(function (b) { addToList(b); });
-        // Clear all keys (tidak reassign variable, hapus tiap key)
         Object.keys(modalPending).forEach(function(k){ delete modalPending[k]; });
         closeModal();
     }
@@ -564,7 +560,6 @@
         var wrap  = document.getElementById('selectedBooksList');
         var empty = document.getElementById('emptySelectedState');
 
-        // Hapus semua child kecuali emptySelectedState
         Array.from(wrap.children).forEach(function(child) {
             if (child.id !== 'emptySelectedState') child.remove();
         });
@@ -619,7 +614,7 @@
     }
 
     /* ══════════════════════════════════════════
-       CONTROLS (exposed to window for inline html)
+       CONTROLS
     ══════════════════════════════════════════ */
     window._inc = function (i) {
         if (selectedBooks[i].quantity < selectedBooks[i].stock) {

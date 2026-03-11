@@ -192,6 +192,29 @@
                             </p>
                         @enderror
                     </div>
+                    <div class="input-group">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Nomor Telepon <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none icon-wrapper">
+                                <i class="fas fa-user text-gray-400"></i>
+                            </div>
+                            <input 
+                                type="text" 
+                                name="phone_number" 
+                                value="{{ old('phone_number') }}"
+                                placeholder="Masukkan nama lengkap Anda"
+                                class="input-field w-full pl-11 pr-4 py-3.5 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 outline-none transition-all @error('phone_number') border-red-500 @enderror"
+                                required>
+                        </div>
+                        @error('phone_number')
+                            <p class="mt-2 text-sm text-red-600 flex items-center gap-1">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span>{{ $message }}</span>
+                            </p>
+                        @enderror
+                    </div>
 
                     <!-- Email -->
                     <div class="input-group">

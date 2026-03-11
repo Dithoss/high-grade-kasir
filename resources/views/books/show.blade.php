@@ -489,6 +489,7 @@
 
                             {{-- ✅ Normal: Tombol Preorder --}}
                             @else
+                            @if($settings->isPreorderEnabled())
                                 <button type="button"
                                     onclick="openPreorderModal()"
                                     class="w-full px-6 py-4 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white rounded-xl font-bold transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
@@ -502,6 +503,7 @@
                                         <span class="ml-1 px-2 py-0.5 bg-white/25 rounded-full text-xs font-bold">Pertama!</span>
                                     @endif
                                 </button>
+                            @endif
                             @endif
                         @endif
                         {{-- ── END STOK LOGIC ── --}}

@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             BookSeeder::class,
             AlgorithmSeeder::class,
-        
+            SystemSettingSeeder::class,
         ]);
     }
 }

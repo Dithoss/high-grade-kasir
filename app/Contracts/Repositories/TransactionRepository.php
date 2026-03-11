@@ -5,6 +5,7 @@ use App\Contracts\Interface\TransactionInterface;
 use App\Helpers\QueryFilterHelper;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
+use App\Services\SettingService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Arr;
@@ -12,10 +13,12 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class TransactionRepository implements TransactionInterface
 {
-    protected Transaction $model ;
-    
-    public function __construct(Transaction $model)
-    {
+    protected Transaction $model;
+
+    public function __construct(
+        Transaction $model,
+        protected SettingService $settings  
+    ) {
         $this->model = $model;
     }
     public function findById(string $id): Transaction
@@ -29,26 +32,28 @@ class TransactionRepository implements TransactionInterface
     {
         $borrowedAt = $data['borrowed_at'] ?? now()->toDateString();
 
-            $dueAt = $data['due_at']
-                ?? \Carbon\Carbon::parse($borrowedAt)->addDays(7)->toDateString();
+        $dueAt = $data['due_at']
+            ?? Carbon::parse($borrowedAt)
+                ->addDays($this->settings->defaultBorrowDays())
+                ->toDateString();
 
-            $transaction = Transaction::create([
-                'user_id' => $data['user_id'] ?? auth()->id(),
-                'borrowed_at' => $borrowedAt,
-                'due_at' => $dueAt,
-                'status' => 'borrowed',
-                'receipt_number' => 'TRX-' . now()->format('Ymd') . '-' . strtoupper(str()->random(6)),
+        $transaction = Transaction::create([
+            'user_id'        => $data['user_id'] ?? auth()->id(),
+            'borrowed_at'    => $borrowedAt,
+            'due_at'         => $dueAt,
+            'status' => $data['status'] ?? 'borrowed',
+            'receipt_number' => 'TRX-' . now()->format('Ymd') . '-' . strtoupper(str()->random(6)),
+        ]);
+
+        foreach ($data['items'] as $item) {
+            TransactionItem::create([
+                'transaction_id' => $transaction->id,
+                'book_id'        => $item['book_id'],
+                'quantity'       => $item['quantity'],
             ]);
+        }
 
-            foreach ($data['items'] as $item) {
-                TransactionItem::create([
-                    'transaction_id' => $transaction->id,
-                    'book_id' => $item['book_id'],
-                    'quantity' => $item['quantity'],
-                ]);
-            }
-
-            return $transaction->load(['user', 'items.book']);
+        return $transaction->load(['user', 'items.book']);
     }
 
     public function update(string $id, array $data): Transaction
@@ -106,26 +111,30 @@ class TransactionRepository implements TransactionInterface
         $query = Transaction::query()
             ->with(['user', 'items.book.category']);
 
-        // Filter by user (for regular users to see only their transactions)
+        // Filter by user (untuk user biasa hanya lihat transaksinya sendiri)
         if ($userId) {
             $query->where('user_id', $userId);
         }
 
-        // Search
+        // Search — cari di receipt_number, nama peminjam, atau nama buku
         if ($search = Arr::get($filters, 'search')) {
             $query->where(function ($q) use ($search) {
-                $q->whereHas('user', fn($query) => $query->where('name', 'like', "%{$search}%"))
-                  ->orWhereHas('items.book', fn($query) => $query->where('name', 'like', "%{$search}%"))
-                  ->orWhere('id', 'like', "%{$search}%");
+                $q->where('receipt_number', 'like', "%{$search}%")
+                ->orWhereHas('user', fn($q2) => $q2->where('name', 'like', "%{$search}%")
+                                                    ->orWhere('email', 'like', "%{$search}%"))
+                ->orWhereHas('items.book', fn($q2) => $q2->where('name', 'like', "%{$search}%"));
             });
         }
 
-        // Filter by status
+        // Filter by status — gunakan kolom status langsung
         if ($status = Arr::get($filters, 'status')) {
-            if ($status === 'borrowed') {
-                $query->whereNull('returned_at');
-            } elseif ($status === 'returned') {
-                $query->whereNotNull('returned_at');
+            if ($status === 'overdue') {
+                // Status khusus: dipinjam tapi sudah lewat jatuh tempo
+                $query->where('status', 'borrowed')
+                    ->whereDate('due_at', '<', now());
+            } else {
+                // borrowed | return_requested | returned | damaged | lost
+                $query->where('status', $status);
             }
         }
 
@@ -149,11 +158,18 @@ class TransactionRepository implements TransactionInterface
         }
 
         // Sorting
-        QueryFilterHelper::applySorting($query, $filters, 'created_at', 'desc');
+        $sortBy  = Arr::get($filters, 'sort_by', 'created_at');
+        $sortDir = Arr::get($filters, 'sort_dir', 'desc');
+
+        $allowedSorts = ['borrowed_at', 'due_at', 'created_at', 'status'];
+        if (in_array($sortBy, $allowedSorts)) {
+            $query->orderBy($sortBy, $sortDir === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->latest();
+        }
 
         return $query->paginate(10)->withQueryString();
     }
-
 
     public function findBySlug(string|int $slug): Transaction
     {
@@ -218,14 +234,14 @@ public function requestExtend(Transaction $transaction): Transaction
         }
 
         $newDueDate = Carbon::parse($transaction->due_at)
-            ->addDays(7)
+            ->addDays($this->settings->extensionDays())
             ->toDateString();
 
         $transaction->update([
-            'due_at'                 => $newDueDate,
-            'extended_due_at'        => $newDueDate,
-            'is_extended'            => true,
-            'extension_approved_at'  => now(),
+            'due_at'                => $newDueDate,
+            'extended_due_at'       => $newDueDate,
+            'is_extended'           => true,
+            'extension_approved_at' => now(),
         ]);
 
         return $transaction->fresh();

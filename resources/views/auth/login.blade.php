@@ -389,6 +389,8 @@
                     </button>
 
                     <!-- Register Link -->
+                     @if($settings->isRegistrationOpen())
+
                     <div class="text-center pt-6 border-t border-gray-100 mt-6">
                         <p class="text-gray-600">
                             Belum punya akun? 
@@ -397,6 +399,7 @@
                             </a>
                         </p>
                     </div>
+                    @endif
                 </form>
             </div>
         </div>

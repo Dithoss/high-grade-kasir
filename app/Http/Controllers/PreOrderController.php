@@ -4,14 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Contracts\Interface\PreorderInterface;
 use App\Models\Book;
+use App\Models\Fine;
 use App\Models\Preorder;
+use App\Services\SettingService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PreorderController extends Controller
 {
-    public function __construct(protected PreorderInterface $repo) {}
+    public function __construct(
+        protected PreorderInterface $repo,        
+        protected SettingService $settings  // ← tambahkan ini
+) {}
 
     /**
      * Halaman daftar preorder milik user
@@ -35,13 +40,36 @@ class PreorderController extends Controller
             'notes'                => ['nullable', 'string', 'max:500'],
         ]);
 
+        if (!$this->settings->isPreorderEnabled()) {
+            return $this->respond($request, false, 'Fitur preorder sedang tidak tersedia.');
+        }
+
+        if (!$this->settings->allowBorrowIfHasUnpaidFine()) {
+            $hasUnpaid = Fine::whereHas('transaction', fn($q) => $q->where('user_id', Auth::id()))
+                ->where('status', 'unpaid')
+                ->exists();
+
+            if ($hasUnpaid) {
+                return $this->respond($request, false, 'Lunasi denda Anda terlebih dahulu sebelum melakukan preorder.');
+            }
+        }
+
+        $maxActive = $this->settings->maxActivePreordersPerUser();
+        if ($maxActive > 0) {
+            $activeCount = Preorder::where('user_id', Auth::id())
+                ->whereIn('status', ['waiting', 'ready'])
+                ->count();
+
+            if ($activeCount >= $maxActive) {
+                return $this->respond($request, false, "Anda sudah memiliki {$maxActive} preorder aktif. Batalkan salah satu untuk melanjutkan.");
+            }
+        }
+
         try {
-            // Pastikan buku memang habis stok
             $book = Book::findOrFail($request->book_id);
             if ($book->stock > 0) {
                 return $this->respond(
-                    $request,
-                    false,
+                    $request, false,
                     'Buku masih tersedia, Anda dapat langsung meminjam.',
                     route('books.show', $book->slug)
                 );
@@ -55,8 +83,7 @@ class PreorderController extends Controller
             ]);
 
             return $this->respond(
-                $request,
-                true,
+                $request, true,
                 "Preorder berhasil! Anda berada di antrian ke-{$preorder->queue_position}.",
                 route('preorders.index')
             );

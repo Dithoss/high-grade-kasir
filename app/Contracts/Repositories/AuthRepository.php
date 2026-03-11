@@ -126,9 +126,8 @@ class AuthRepository implements AuthInterface
     }
     public function getAll(array $filters = []): LengthAwarePaginator
     {
-        $query = $this->model->whereHas('roles', function ($q) {
-            $q->where('name', ['admin', 'user']);
-        });
+        $query = $this->model->with('roles');
+
         $searchColumns = ['name', 'email'];
         QueryFilterHelper::applyFilters($query, $filters, $searchColumns);
         QueryFilterHelper::applySorting($query, $filters, 'created_at', 'desc');

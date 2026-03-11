@@ -118,7 +118,6 @@ class BookObserver
                 ->whereIn('status', ['waiting', 'ready'])
                 ->update(['status' => 'cancelled']);
 
-            // EC-14: Notif via queue — tidak blocking meski 100+ user
             foreach ($actives as $preorder) {
                 if ($preorder->user) {
                     $preorder->user->notify(

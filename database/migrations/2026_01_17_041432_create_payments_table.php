@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->uuid('id')->primary();
-
             $table->uuid('fine_id')->index();
+
             $table->foreign('fine_id')
                 ->references('id')->on('fines')
                 ->onDelete('cascade');
