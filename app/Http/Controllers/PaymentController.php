@@ -26,7 +26,7 @@ class PaymentController extends Controller
                     'quantity' => 1,
                 ]
             ],
-            'callback_url' => 'https://ngrok.com/r/ai/tripay/callback', // ganti <NGROK_URL>
+            'callback_url' => 'https://ngrok.com/r/ai/tripay/callback', 
             'return_url' => 'http://localhost:8000/payment/success',
             'expired_time' => now()->addMinutes(60)->timestamp,
         ];
