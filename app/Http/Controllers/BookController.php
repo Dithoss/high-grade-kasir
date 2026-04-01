@@ -6,6 +6,7 @@ use App\Contracts\Interface\BookInterface;
 use App\Contracts\Interface\CategoryInterface;
 use App\Contracts\Repositories\AlgorithmRepository;
 use App\Http\Handlers\BookHandler;
+use App\Http\Requests\Book\MassBookActionRequest;
 use App\Http\Requests\Book\StoreBook;
 use App\Http\Requests\Book\UpdateBook;
 use App\Models\Book;
@@ -116,12 +117,59 @@ class BookController extends Controller
 
     public function trash()
     {
-        $book = $this->repo->trash([])
-            ->paginate(10);
-
+        $book = $this->repo->trash([]);
         return view('books.trash', compact('book'));
     }
+    public function emptyTrash()
+    {
+        $count = Book::onlyTrashed()->count();
 
+        if ($count === 0) {
+            return redirect()->route('books.trash')
+                ->with('info', 'Sampah sudah kosong.');
+        }
+
+        Book::onlyTrashed()->forceDelete();
+
+        return redirect()->route('books.trash')
+            ->with('success', "Berhasil menghapus {$count} buku secara permanen.");
+    }
+
+    public function massRestore(MassBookActionRequest $request)
+    {
+        $count = Book::onlyTrashed()
+            ->whereIn('id', $request->ids)
+            ->restore();
+
+        return redirect()->route('books.trash')
+            ->with('success', "Berhasil memulihkan {$count} buku.");
+    }
+
+    public function massForceDelete(MassBookActionRequest $request)
+    {
+        $count = Book::onlyTrashed()
+            ->whereIn('id', $request->ids)
+            ->count();
+
+        Book::onlyTrashed()
+            ->whereIn('id', $request->ids)
+            ->forceDelete();
+
+        return redirect()->route('books.trash')
+            ->with('success', "Berhasil menghapus {$count} buku secara permanen.");
+}
+    public function forceDelete(string $id)
+    {
+        try {
+            $this->repo->forceDelete($id);
+
+            return redirect()
+                ->route('books.trash')
+                ->with('success', 'Buku berhasil dihapus permanen.');
+        } catch (ModelNotFoundException) {
+            abort(404);
+        }
+    }
     public function restore(string $id)
     {
         $this->repo->restore($id);

@@ -156,11 +156,15 @@ Route::middleware(['auth', 'maintenance'])->group(function () {
         Route::delete('books/{book}', [BookController::class, 'destroy'])->name('books.destroy');
         Route::get('books-trash', [BookController::class, 'trash'])->name('books.trash');
         Route::put('books/{id}/restore', [BookController::class, 'restore'])->name('books.restore');
+        Route::delete('books/trash/empty',     [BookController::class, 'emptyTrash'])->name('books.empty-trash');
+        Route::post('books/mass-restore',    [BookController::class, 'massRestore'])->name('books.mass-restore');
+        Route::delete('books/mass-force-delete', [BookController::class, 'massForceDelete'])->name('books.mass-force-delete');
+        Route::delete('books/{book}/force-delete', [BookController::class, 'massForceDelete'])->name('books.force-delete');
 
         Route::resource('categories', CategoryController::class);
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.index');
 
-
+ 
         Route::post('transactions/admin', [TransactionController::class, 'storeAdmin'])
             ->name('transactions.store.admin');
         Route::get('transactions-trash', [TransactionController::class, 'trash'])
