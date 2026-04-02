@@ -22,6 +22,9 @@ class DatabaseSeeder extends Seeder
             BookSeeder::class,
             AlgorithmSeeder::class,
             SystemSettingSeeder::class,
+            TransactionSeeder::class,
+            NotificationSeeder::class,
+            PreorderSeeder::class,
         ]);
     }
 }

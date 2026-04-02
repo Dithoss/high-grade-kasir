@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Notifications;
+namespace App\Notifications\Transaction;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -8,9 +8,9 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Notifikasi saat preorder user kadaluarsa karena tidak dikonfirmasi tepat waktu.
+ * Notifikasi saat buku berhasil dikembalikan oleh user.
  */
-class PreorderExpiredNotification extends Notification implements ShouldQueue
+class ReturnedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -18,12 +18,12 @@ class PreorderExpiredNotification extends Notification implements ShouldQueue
     public int $backoff = 60;
 
     /**
-     * @param string $bookName   Nama buku
-     * @param string $expiredAt  Tanggal kadaluarsa (formatted string)
+     * @param string $bookName    Nama buku
+     * @param string $returnedAt  Tanggal dikembalikan (formatted string)
      */
     public function __construct(
         public readonly string $bookName,
-        public readonly string $expiredAt,
+        public readonly string $returnedAt,
     ) {}
 
     public function via(object $notifiable): array
@@ -34,16 +34,16 @@ class PreorderExpiredNotification extends Notification implements ShouldQueue
     public function toDatabase(object $notifiable): array
     {
         return [
-            'title'      => '⏰ Preorder Kadaluarsa',
-            'message'    => "Preorder Anda untuk buku \"{$this->bookName}\" telah kadaluarsa pada {$this->expiredAt} karena tidak dikonfirmasi tepat waktu.",
-            'icon'       => 'fa-clock',
-            'icon_color' => 'orange',
+            'title'      => '✅ Buku Dikembalikan',
+            'message'    => "Buku \"{$this->bookName}\" berhasil dikembalikan pada {$this->returnedAt}. Terima kasih!",
+            'icon'       => 'fa-check-circle',
+            'icon_color' => 'green',
         ];
     }
 
     public function failed(\Throwable $exception): void
     {
-        Log::error('PreorderExpiredNotification: retry gagal', [
+        Log::error('ReturnedNotification: retry gagal', [
             'book'  => $this->bookName,
             'error' => $exception->getMessage(),
         ]);
