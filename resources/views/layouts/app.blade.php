@@ -10,47 +10,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     @stack('styles')
     <style>
         * { font-family: 'Poppins', sans-serif; }
-
-        :root {
-            --bg-primary: #f9fafb;
-            --bg-secondary: #ffffff;
-            --bg-tertiary: #f3f4f6;
-            --text-primary: #111827;
-            --text-secondary: #6b7280;
-            --border-color: #e5e7eb;
-            --shadow: rgba(0, 0, 0, 0.1);
-        }
-
-        .dark {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-tertiary: #334155;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --border-color: #334155;
-            --shadow: rgba(0, 0, 0, 0.3);
-        }
-
-        .dark body { background-color: var(--bg-primary); color: var(--text-primary); }
-        .dark .bg-white { background-color: var(--bg-secondary) !important; }
-        .dark .bg-gray-50 { background-color: var(--bg-primary) !important; }
-        .dark .bg-gray-100 { background-color: var(--bg-tertiary) !important; }
-        .dark .text-gray-900 { color: var(--text-primary) !important; }
-        .dark .text-gray-700 { color: #cbd5e1 !important; }
-        .dark .text-gray-600 { color: var(--text-secondary) !important; }
-        .dark .text-gray-500 { color: #64748b !important; }
-        .dark .border-gray-200 { border-color: var(--border-color) !important; }
-        .dark .border-gray-100 { border-color: #475569 !important; }
-        .dark .card-friendly { background-color: var(--bg-secondary) !important; box-shadow: 0 2px 8px var(--shadow) !important; }
-        .dark input, .dark select, .dark textarea { background-color: var(--bg-tertiary) !important; border-color: var(--border-color) !important; color: var(--text-primary) !important; }
-        .dark input::placeholder { color: var(--text-secondary) !important; }
-        .dark .search-input { background-color: var(--bg-tertiary) !important; }
-        .dark .search-input:focus { background-color: var(--bg-secondary) !important; }
-        .dark .flash-message { box-shadow: 0 4px 12px var(--shadow) !important; }
 
         /* ── Profile dropdown (mobile) ── */
         .profile-dropdown {
@@ -65,11 +27,6 @@
             border: 1px solid #e5e7eb;
             z-index: 100;
             overflow: hidden;
-        }
-        .dark .profile-dropdown {
-            background: var(--bg-secondary);
-            border-color: var(--border-color);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
         .profile-dropdown.open {
             display: block;
@@ -90,9 +47,7 @@
             cursor: pointer;
             text-decoration: none;
         }
-        .dark .profile-dropdown-item { color: #cbd5e1; }
         .profile-dropdown-item:hover { background: #f0f9ff; }
-        .dark .profile-dropdown-item:hover { background: #1e3a5f; }
         .profile-dropdown-item .item-icon {
             width: 32px; height: 32px;
             border-radius: 8px;
@@ -105,30 +60,8 @@
         /* ── Scrollbar ── */
         ::-webkit-scrollbar { width: 10px; height: 10px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
-        .dark ::-webkit-scrollbar-track { background: #1e293b; }
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 5px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-
-        * { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
-
-        /* ── Dark mode toggle ── */
-        .dark-mode-toggle {
-            position: relative; width: 56px; height: 28px;
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            border-radius: 14px; cursor: pointer; transition: all 0.3s ease;
-        }
-        .dark .dark-mode-toggle { background: linear-gradient(135deg, #1e293b, #0f172a); }
-        .dark-mode-toggle-slider {
-            position: absolute; top: 3px; left: 3px;
-            width: 22px; height: 22px;
-            background: white; border-radius: 50%;
-            transition: all 0.3s ease;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        .dark .dark-mode-toggle-slider { transform: translateX(28px); }
-        .dark-mode-toggle-slider i { font-size: 12px; color: #3b82f6; }
-        .dark .dark-mode-toggle-slider i { color: #fbbf24; }
 
         /* ── Notification badge ── */
         .notification-badge {
@@ -157,10 +90,6 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.15);
             z-index: 1000; max-height: 500px; overflow-y: auto;
         }
-        .dark .notification-dropdown {
-            background: var(--bg-secondary);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-        }
         .notification-dropdown.show {
             display: block;
             animation: slideDown 0.2s ease-out;
@@ -171,7 +100,6 @@
         }
         .notification-item { transition: background-color 0.2s; }
         .notification-item.unread { background-color: #eff6ff; }
-        .dark .notification-item.unread { background-color: #1e3a5f; }
 
         /* ── Misc ── */
         .btn-large { min-height: 44px; font-size: 16px; padding: 0 24px; }
@@ -182,7 +110,6 @@
             box-shadow: 0 4px 12px rgba(59,130,246,0.3);
         }
         .menu-active i { color: white !important; }
-        .dark .menu-active { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
 
         .card-friendly {
             background: white; border-radius: 16px;
@@ -213,7 +140,6 @@
             font-size: 13px; border-radius: 6px;
             white-space: nowrap; margin-bottom: 8px; z-index: 1000;
         }
-        .dark [data-tooltip]:hover::after { background: #0f172a; }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -244,10 +170,9 @@
             </button>
         </div>
 
-        {{-- ── Profile Section with Slide-down Mini Card ── --}}
+        {{-- ── Profile Section ── --}}
         <div class="px-4 pt-4 pb-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 relative">
 
-            {{-- Trigger Button --}}
             <button id="profileToggle"
                     onclick="toggleProfileDropdown()"
                     class="w-full text-left group">
@@ -285,7 +210,6 @@
                 </div>
             </button>
 
-            {{-- Slide-down card panel --}}
             <div id="profileCardDropdown"
                  class="overflow-hidden transition-all duration-300 ease-in-out"
                  style="max-height:0; opacity:0;">
@@ -586,18 +510,6 @@
                     {{-- Right actions --}}
                     <div class="flex items-center gap-3">
 
-                        {{-- Dark mode --}}
-                        <button id="darkModeToggle"
-                                class="btn-large flex items-center justify-center w-12 h-12
-                                       bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 relative"
-                                data-tooltip="Toggle Dark Mode">
-                            <div class="dark-mode-toggle">
-                                <div class="dark-mode-toggle-slider">
-                                    <i class="fas fa-sun"></i>
-                                </div>
-                            </div>
-                        </button>
-
                         {{-- Filter --}}
                         <button id="toggleFilter"
                                 class="btn-large flex items-center gap-2 px-6
@@ -733,7 +645,7 @@
             </div>
         </header>
 
-        {{-- ── Filter Panel (slide-in) ── --}}
+        {{-- ── Filter Panel ── --}}
         <div id="filterPanel"
              class="fixed inset-y-0 right-0 z-50 w-full sm:w-96 bg-white shadow-2xl
                     transform translate-x-full transition-transform duration-300 overflow-y-auto">
@@ -920,11 +832,8 @@
     <i class="fas fa-arrow-up text-xl"></i>
 </button>
 
-{{-- ════════════════════════════════════════════════════════════════════════ --}}
-{{-- SCRIPTS                                                                  --}}
-{{-- ════════════════════════════════════════════════════════════════════════ --}}
 <script>
-    // ── Card fetch URL (role-aware) ───────────────────────────────────────────
+    // ── Card fetch URL ────────────────────────────────────────────────────────
     const CARD_FETCH_URL = '{{ Auth::user()->hasRole("admin")
         ? route("admin.library-cards.by-user", Auth::id())
         : route("library-card.json") }}';
@@ -964,7 +873,6 @@
         }
 
         function _renderCard(d) {
-            // Photo / fallback
             const photo    = document.getElementById('pcPhoto');
             const fallback = document.getElementById('pcFallback');
             if (d.photo_url) {
@@ -978,14 +886,12 @@
                 fallback.classList.remove('hidden');
             }
 
-            // Text fields
             document.getElementById('pcName').textContent   = d.user_name  ?? '-';
             document.getElementById('pcEmail').textContent  = d.user_email ?? '-';
             document.getElementById('pcRole').textContent   = d.user_role  ?? '-';
             document.getElementById('pcNumber').textContent = d.card_number ?? '-';
             document.getElementById('pcExpiry').textContent = d.expired_at_formatted_short ?? '-';
 
-            // Status badge
             const badge  = document.getElementById('pcStatusBadge');
             const bStyle = {
                 active : 'bg-green-400/20 text-green-200 border-green-400/40',
@@ -1002,12 +908,10 @@
             badge.style.fontSize = '10px';
             badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full mr-1 ${bDot[status] ?? bDot.active}"></span>${status.toUpperCase()}`;
 
-            // Swap skeleton → card
             document.getElementById('pcSkeleton').classList.add('hidden');
             document.getElementById('pcCard').classList.remove('hidden');
         }
 
-        // Close panel when clicking outside
         document.addEventListener('click', (e) => {
             const toggle = document.getElementById('profileToggle');
             const panel  = document.getElementById('profileCardDropdown');
@@ -1019,25 +923,6 @@
             }
         });
     })();
-
-    // ── Dark Mode ─────────────────────────────────────────────────────────────
-    const darkModeToggle = document.getElementById('darkModeToggle');
-    const html = document.documentElement;
-
-    // Apply saved preference immediately
-    if ((localStorage.getItem('darkMode') || 'light') === 'dark') {
-        html.classList.add('dark');
-        const icon = darkModeToggle?.querySelector('.dark-mode-toggle-slider i');
-        if (icon) icon.className = 'fas fa-moon';
-    }
-
-    darkModeToggle?.addEventListener('click', () => {
-        html.classList.toggle('dark');
-        const isDark = html.classList.contains('dark');
-        localStorage.setItem('darkMode', isDark ? 'dark' : 'light');
-        const icon = darkModeToggle.querySelector('.dark-mode-toggle-slider i');
-        if (icon) icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
-    });
 
     // ── Sidebar ───────────────────────────────────────────────────────────────
     const sidebar  = document.getElementById('sidebar');
@@ -1086,14 +971,12 @@
 
     // ── Close dropdowns on outside click ─────────────────────────────────────
     document.addEventListener('click', (e) => {
-        // Mobile profile dropdown
         const mobileWrapper = document.getElementById('mobileProfileWrapper');
         const mobileDd      = document.getElementById('mobileProfileDropdown');
         if (mobileDd && mobileWrapper && !mobileWrapper.contains(e.target)) {
             mobileDd.classList.remove('open');
         }
 
-        // Notification dropdown
         const notifBtn = document.getElementById('notificationBtn');
         const notifDd  = document.getElementById('notificationDropdown');
         if (notifDd && notifBtn &&
