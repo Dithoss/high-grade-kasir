@@ -407,18 +407,41 @@
                     </div>
                     <div>
                         <p class="font-bold text-gray-900 text-base capitalize">{{ $card->status }}</p>
-                        @php $daysLeft = now()->diffInDays($card->expired_at, false); @endphp
-                        @if($daysLeft > 0)
-                            <p class="text-xs text-gray-400">Tersisa {{ $daysLeft }} hari</p>
-                        @else
-                            <p class="text-xs text-rose-500">Sudah kedaluwarsa</p>
-                        @endif
+                        @php
+                        $expiredAt  = $card->expired_at;
+                        $now        = now();
+                        $isFuture   = $expiredAt->isFuture();
+
+                        $diffYears  = (int) abs($now->diffInYears($expiredAt));
+                        $diffMonths = (int) abs($now->diffInMonths($expiredAt)) % 12;
+                        $diffDays   = (int) abs($now->diffInDays($expiredAt)) % 30;
+
+                        // Buat label sisa/lewat waktu yang natural
+                        $parts = [];
+                        if ($diffYears  > 0) $parts[] = $diffYears  . ' tahun';
+                        if ($diffMonths > 0) $parts[] = $diffMonths . ' bulan';
+                        if ($diffDays   > 0 && $diffYears === 0) $parts[] = $diffDays . ' hari';
+                        $diffLabel = implode(' ', $parts) ?: 'hari ini';
+                    @endphp
+
+                    <p class="text-xs text-gray-400 mt-0.5">
+                        Berlaku hingga: <span class="font-semibold text-gray-600">{{ $expiredAt->format('d M Y') }}</span>
+                    </p>
+                    @if($isFuture)
+                        <p class="text-xs text-emerald-500 mt-0.5">
+                            <i class="fas fa-clock mr-1"></i>Tersisa {{ $diffLabel }}
+                        </p>
+                    @else
+                        <p class="text-xs text-rose-500 mt-0.5">
+                            <i class="fas fa-exclamation-circle mr-1"></i>Kedaluwarsa {{ $diffLabel }} lalu
+                        </p>
+                    @endif
                     </div>
                 </div>
             </div>
 
             {{-- ── Download Card (Admin Only) ── --}}
-            @role('admin')
+            @if(auth()->user()->hasRole('admin'))            \
             <div class="info-card" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe); border-color: #c4b5fd;">
                 <div class="flex items-center gap-2 mb-1">
                     <div class="w-7 h-7 bg-violet-100 rounded-lg flex items-center justify-center">
@@ -437,13 +460,8 @@
                     <button onclick="downloadBack()"  class="btn-primary btn-outline w-full justify-center" style="font-size:13px;">
                         <i class="fas fa-image"></i> Belakang Saja
                     </button>
-                    <button onclick="window.print()"  class="btn-primary btn-outline w-full justify-center" style="font-size:13px;">
-                        <i class="fas fa-print"></i> Print Kartu
-                    </button>
                 </div>
             </div>
-            @endrole
-
             {{-- ── Change Status ── --}}
             <div class="info-card">
                 <div class="flex items-center gap-2 mb-4">
@@ -470,7 +488,6 @@
                     @endforeach
                 </div>
             </div>
-
             {{-- ── Regenerate ── --}}
             <div class="info-card" style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); border-color: #a7f3d0;">
                 <div class="flex items-center gap-2 mb-1">
@@ -488,6 +505,7 @@
                     </button>
                 </form>
             </div>
+            @endif
 
             {{-- ── Update Photo ── --}}
             <div class="info-card">

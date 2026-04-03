@@ -40,7 +40,18 @@ class CategoryRepository implements CategoryInterface
     
     public function forceDelete(mixed $id): bool
     {
-        return $this->model->withTrashed()->findOrFail($id)->forceDelete();
+        $category = $this->model->withTrashed()->findOrFail($id);
+
+        // Cek apakah kategori masih dipakai buku (termasuk yang soft-deleted)
+        $hasBooks = \App\Models\Book::withTrashed()
+            ->where('category_id', $category->id)
+            ->exists();
+
+        if ($hasBooks) {
+            throw new \Exception('Kategori tidak dapat dihapus permanen karena masih digunakan oleh buku.');
+        }
+
+        return $category->forceDelete();
     }
 
     public function restore(mixed $id): bool

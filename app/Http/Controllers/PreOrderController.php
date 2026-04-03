@@ -6,6 +6,7 @@ use App\Contracts\Interface\PreorderInterface;
 use App\Models\Book;
 use App\Models\Fine;
 use App\Models\Preorder;
+use App\Notifications\PreorderReadyNotification;
 use App\Services\SettingService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -200,4 +201,62 @@ class PreorderController extends Controller
 
         return back()->with('error', $message);
     }
+    public function adminShow(string $id)
+{
+    $preorder = $this->repo->findById($id);
+    return view('preorders.show', compact('preorder'));
+}
+
+public function adminMarkReady(string $id)
+{
+    $preorder = $this->repo->findById($id);
+
+    if ($preorder->status !== 'waiting') {
+        return back()->with('error', 'Hanya preorder berstatus menunggu yang bisa ditandai siap.');
+    }
+
+    $expiredDays = $this->settings->get('preorder_ready_expiry_days', 3);
+
+    $this->repo->update($id, [
+        'status'     => 'ready',
+        'expired_at' => now()->addDays($expiredDays),
+    ]);
+
+    // Kirim notifikasi ke user
+    $preorder->refresh();
+    $preorder->user->notify(new PreorderReadyNotification($preorder));
+
+    return back()->with('success', "Preorder #{$id} ditandai siap. Notifikasi dikirim ke {$preorder->user->name}.");
+}
+
+public function adminNotify(string $id)
+{
+    $preorder = $this->repo->findById($id);
+
+    if ($preorder->status !== 'ready') {
+        return back()->with('error', 'Hanya preorder berstatus siap yang bisa dikirim notifikasi.');
+    }
+
+    $preorder->user->notify(new PreorderReadyNotification($preorder));
+
+    return back()->with('success', "Notifikasi reminder dikirim ke {$preorder->user->name}.");
+}
+
+public function adminCancel(string $id)
+{
+    try {
+        $preorder = $this->repo->findById($id);
+
+        if (!$preorder->isActive()) {
+            return back()->with('error', 'Preorder ini sudah tidak aktif.');
+        }
+
+        $this->repo->cancel($id);
+
+        return back()->with('success', 'Preorder berhasil dibatalkan oleh admin.');
+    } catch (\RuntimeException $e) {
+        return back()->with('error', $e->getMessage());
+    }
+}
+    
 }

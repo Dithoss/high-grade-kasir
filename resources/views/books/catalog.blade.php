@@ -455,11 +455,18 @@
                                 {{ $hasActiveFine ? 'Ada Denda' : 'Habis' }}
                             </span>
                         @endif
-                        <a href="{{ route('wishlist.toggle', $b->slug) }}"
-                           class="btn-wishlist {{ $inWishlist ? 'active' : '' }}"
-                           title="{{ $inWishlist ? 'Hapus dari wishlist' : 'Tambah ke wishlist' }}">
+                        {{-- Ganti <a href> dengan button + fetch --}}
+                        <button
+                            type="button"
+                            data-book-id="{{ $b->id }}"
+                            data-toggle-url="{{ route('wishlist.toggle', $b->id) }}"
+                            data-in-wishlist="{{ $inWishlist ? '1' : '0' }}"
+                            onclick="toggleWishlist(this)"
+                            class="btn-wishlist {{ $inWishlist ? 'active' : '' }}"
+                            title="{{ $inWishlist ? 'Hapus dari wishlist' : 'Tambah ke wishlist' }}"
+                        >
                             <i class="fas fa-heart text-xs"></i>
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -683,6 +690,55 @@
 
 @push('scripts')
 <script>
+console.log('Script loaded ✓');
+
+function toggleWishlist(btn) {
+    console.log('toggleWishlist called');
+    console.log('URL:', btn.dataset.toggleUrl);
+    console.log('Book ID:', btn.dataset.bookId);
+
+    const toggleUrl = btn.dataset.toggleUrl;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    console.log('CSRF:', csrfToken ? 'found' : 'NOT FOUND');
+
+    if (!toggleUrl) { console.error('toggleUrl kosong!'); return; }
+    if (!csrfToken) { console.error('CSRF tidak ada!'); return; }
+
+    btn.disabled = true;
+    btn.style.opacity = '0.5'; // visual feedback
+
+    fetch(toggleUrl, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(res => {
+        console.log('HTTP Status:', res.status);
+        return res.text();
+    })
+    .then(text => {
+        console.log('Response:', text);
+        try {
+            const data = JSON.parse(text);
+            const isNowActive = data.status === 'added';
+            btn.classList.toggle('active', isNowActive);
+            btn.title = isNowActive ? 'Hapus dari wishlist' : 'Tambah ke wishlist';
+        } catch(e) {
+            console.error('JSON parse error:', e);
+            console.error('Raw response was:', text);
+        }
+    })
+    .catch(err => {
+        console.error('Fetch error:', err);
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    });
+}
 function switchTab(tab) {
     const isBooks = tab === 'books';
     document.getElementById('panelBooks').classList.toggle('hidden', !isBooks);

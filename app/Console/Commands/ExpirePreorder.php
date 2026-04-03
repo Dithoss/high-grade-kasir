@@ -66,7 +66,10 @@ class ExpirePreorders extends Command
 
                 // 3. EC-14: Notif ke user yang expired — via queue, retry otomatis
                 if ($preorder->user) {
-                    $preorder->user->notify(new PreorderExpiredNotification($preorder));
+                $preorder->user->notify(new PreorderExpiredNotification(
+                    bookName:  $preorder->book?->name ?? 'Unknown',
+                    expiredAt: $preorder->expired_at?->format('d M Y H:i') ?? '-',
+                ));                
                 }
 
                 // 4. Notify user berikutnya jika stok > 0

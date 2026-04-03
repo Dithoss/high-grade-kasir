@@ -37,10 +37,22 @@ class BookRepository implements BookInterface
         return $Book->delete();
     }
     
-    public function forceDelete(mixed $id): bool
-    {
-        return $this->model->withTrashed()->findOrFail($id)->forceDelete();
+public function forceDelete(mixed $id): bool
+{
+    $book = $this->model->withTrashed()->findOrFail($id);
+
+    $activeTransactions = \App\Models\TransactionItem::where('book_id', $book->id)
+        ->whereHas('transaction', function ($q) {
+            $q->whereIn('status', ['pending_approval', 'borrowed', 'return_requested']);
+        })
+        ->exists();
+
+    if ($activeTransactions) {
+        throw new \Exception('Buku tidak dapat dihapus permanen karena masih memiliki transaksi aktif.');
     }
+
+    return $book->forceDelete();
+}
 
     public function restore(mixed $id): bool
     {
@@ -102,4 +114,5 @@ class BookRepository implements BookInterface
             ->orderBy('deleted_at', 'desc')
             ->paginate($perPage);
     }
+    
 }

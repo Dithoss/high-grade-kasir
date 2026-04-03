@@ -163,8 +163,7 @@ class AuthController extends Controller
             $user = $this->authHandler->storeCustomer($request->validated());
 
             return redirect()
-                ->route('users.index')
-                ->with('success', __('alert.add_success'));
+                ->route('users.index');
         } catch (\Throwable $e) {
             return back()
                 ->withErrors('Gagal menambahkan user: ' . $e->getMessage())
@@ -197,8 +196,7 @@ class AuthController extends Controller
                 : 'users.dashboard';
 
             return redirect()
-                ->route($redirectRoute)
-                ->with('success', __('alert.update_success'));
+                ->route($redirectRoute);
 
         } catch (ModelNotFoundException $e) {
             abort(404);
@@ -213,7 +211,7 @@ class AuthController extends Controller
         try {
             $this->authInterface->delete($id);
 
-            return back()->with('success', __('alert.delete_success'));
+            return back();
         } catch (ModelNotFoundException $e) {
             abort(404);
         }

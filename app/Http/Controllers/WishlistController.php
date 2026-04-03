@@ -16,24 +16,18 @@ class WishlistController extends Controller
         return view('wishlist.index', compact('wishlists'));
     }
 
-   public function toggle(Book $book)
+public function toggle(string $bookId)
 {
-    \Log::info('Wishlist toggle called', [
-        'book_id' => $book->id,
-        'book_slug' => $book->slug,
-        'user_id' => auth()->id()
-    ]);
+    $book = Book::findOrFail($bookId);
 
     $user = auth()->user();
 
     if ($this->wishlistRepo->exists($user, $book)) {
         $this->wishlistRepo->remove($user, $book);
-        \Log::info('Wishlist removed successfully');
         return response()->json(['status' => 'removed', 'message' => 'Book removed from wishlist']);
     }
 
     $this->wishlistRepo->add($user, $book);
-    \Log::info('Wishlist added successfully');
     return response()->json(['status' => 'added', 'message' => 'Book added to wishlist']);
 }
 }

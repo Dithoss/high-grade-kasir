@@ -113,13 +113,6 @@
                 >
                     <i class="fas fa-redo"></i> Reset
                 </a>
-                <button
-                    type="button"
-                    onclick="window.print()"
-                    class="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 ml-auto"
-                >
-                    <i class="fas fa-print"></i> Cetak
-                </button>
             </div>
         </form>
     </div>
@@ -161,8 +154,8 @@
 
                                         @case('borrowed')
                                             @php
-                                                $daysLeft = \Carbon\Carbon::parse($transaction->due_at)->diffInDays(now(), false);
-                                                $isOverdue = $daysLeft > 0;
+                                                $daysLeft = \Carbon\Carbon::now()->diffInDays($transaction->due_at, false);
+                                                $isOverdue = $daysLeft < 0;
                                             @endphp
                                             @if($isOverdue)
                                                 <span class="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
@@ -247,33 +240,50 @@
                         <!-- Books List -->
                         <div class="space-y-2 mb-4">
                             @foreach($transaction->items as $item)
-                                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                    @if($item->book->image)
-                                        <img
-                                            src="{{ asset('storage/' . $item->book->image) }}"
-                                            alt="{{ $item->book->name }}"
-                                            class="w-12 h-16 object-cover rounded"
-                                        >
-                                    @else
-                                        <div class="w-12 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded flex items-center justify-center flex-shrink-0">
-                                            <i class="fas fa-book text-white"></i>
-                                        </div>
-                                    @endif
-                                    <div class="flex-1 min-w-0">
-                                        <h4 class="font-semibold text-gray-900 truncate">{{ $item->book->name }}</h4>
+                            @php $book = $item->book; @endphp
+                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                {{-- Cover --}}
+                                @if($book && $book->image)
+                                    <img
+                                        src="{{ asset('storage/' . $book->image) }}"
+                                        alt="{{ $book->name }}"
+                                        class="w-12 h-16 object-cover rounded flex-shrink-0"
+                                    >
+                                @else
+                                    <div class="w-12 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-book text-white"></i>
+                                    </div>
+                                @endif
+
+                                <div class="flex-1 min-w-0">
+                                    @if($book)
+                                        <h4 class="font-semibold text-gray-900 truncate">
+                                            {{ $book->name }}
+                                            @if($book->trashed())
+                                                <span class="ml-1 text-xs text-gray-400 font-normal italic">(dihapus)</span>
+                                            @endif
+                                        </h4>
                                         <p class="text-sm text-gray-600">
-                                            @if($item->book->writer ?? $item->book->author ?? null)
-                                                <i class="fas fa-user mr-1"></i>{{ $item->book->writer ?? $item->book->author }} •
+                                            @if($book->writer ?? $book->author ?? null)
+                                                <i class="fas fa-user mr-1"></i>{{ $book->writer ?? $book->author }} •
                                             @endif
                                             Jumlah: {{ $item->quantity }} buku
                                         </p>
-                                        @if($item->book->category)
+                                        @if($book->category)
                                             <span class="inline-block mt-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                                                {{ $item->book->category->name }}
+                                                {{ $book->category->name }}
                                             </span>
                                         @endif
-                                    </div>
+                                    @else
+                                        {{-- Buku force deleted --}}
+                                        <h4 class="font-semibold text-gray-400 truncate italic">Buku telah dihapus</h4>
+                                        <p class="text-sm text-gray-400">Jumlah: {{ $item->quantity }} buku</p>
+                                        <span class="inline-block mt-1 text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                                            <i class="fas fa-trash mr-1"></i>Tidak tersedia
+                                        </span>
+                                    @endif
                                 </div>
+                            </div>
                             @endforeach
                         </div>
 
@@ -324,13 +334,18 @@
                                     <div>
                                         <div class="text-gray-500 text-xs">Sisa Waktu</div>
                                         <div class="font-semibold text-gray-900">
-                                            @php $daysLeft = \Carbon\Carbon::parse($transaction->due_at)->diffInDays(now(), false); @endphp
-                                            @if($daysLeft < 0)
-                                                <span class="text-green-600">{{ abs($daysLeft) }} hari lagi</span>
-                                            @elseif($daysLeft == 0)
+                                            @php
+                                                $daysLeft  = (int) \Carbon\Carbon::now()->diffInDays($transaction->due_at, false);
+                                                $hoursLeft = (int) \Carbon\Carbon::now()->diffInHours($transaction->due_at, false);
+                                            @endphp
+                                            @if($daysLeft > 1)
+                                                <span class="text-green-600">{{ $daysLeft }} hari lagi</span>
+                                            @elseif($hoursLeft > 0)
+                                                <span class="text-amber-600">{{ $hoursLeft }} jam lagi</span>
+                                            @elseif($hoursLeft === 0)
                                                 <span class="text-amber-600">Hari ini</span>
                                             @else
-                                                <span class="text-red-600">Terlambat {{ $daysLeft }} hari</span>
+                                                <span class="text-red-600">Terlambat {{ abs($daysLeft) }} hari</span>
                                             @endif
                                         </div>
                                     </div>

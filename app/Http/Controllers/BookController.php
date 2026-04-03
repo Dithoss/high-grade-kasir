@@ -135,41 +135,74 @@ class BookController extends Controller
             ->with('success', "Berhasil menghapus {$count} buku secara permanen.");
     }
 
-    public function massRestore(MassBookActionRequest $request)
-    {
-        $count = Book::onlyTrashed()
-            ->whereIn('id', $request->ids)
-            ->restore();
+// BookController.php
 
-        return redirect()->route('books.trash')
-            ->with('success', "Berhasil memulihkan {$count} buku.");
-    }
+public function massRestore(Request $request)
+{
+    $validated = $request->validate([
+        'ids'   => 'required|array|min:1',
+        'ids.*' => 'required|string|uuid',
+    ]);
 
-    public function massForceDelete(MassBookActionRequest $request)
-    {
-        $count = Book::onlyTrashed()
-            ->whereIn('id', $request->ids)
-            ->count();
+    $count = Book::onlyTrashed()
+        ->whereIn('id', $validated['ids'])
+        ->restore();
 
-        Book::onlyTrashed()
-            ->whereIn('id', $request->ids)
-            ->forceDelete();
-
-        return redirect()->route('books.trash')
-            ->with('success', "Berhasil menghapus {$count} buku secara permanen.");
+    return redirect()->route('books.trash')
+        ->with('success', "Berhasil memulihkan {$count} buku.");
 }
-    public function forceDelete(string $id)
-    {
-        try {
-            $this->repo->forceDelete($id);
 
-            return redirect()
-                ->route('books.trash')
-                ->with('success', 'Buku berhasil dihapus permanen.');
-        } catch (ModelNotFoundException) {
-            abort(404);
-        }
+public function massForceDelete(Request $request)
+{
+    $validated = $request->validate([
+        'ids'   => 'required|array|min:1',
+        'ids.*' => 'required|string|uuid',
+    ]);
+
+    $blocked = \App\Models\TransactionItem::whereIn('book_id', $validated['ids'])
+        ->whereHas('transaction', function ($q) {
+            $q->whereIn('status', ['pending_approval', 'borrowed', 'return_requested']);
+        })
+        ->with('transaction.items.book:id,name')
+        ->get()
+        ->pluck('book.name')
+        ->unique()
+        ->filter()
+        ->values();
+
+    if ($blocked->isNotEmpty()) {
+        $list = $blocked->implode(', ');
+        return redirect()->route('books.trash')
+            ->with('error', "Buku berikut tidak dapat dihapus karena masih memiliki transaksi aktif: {$list}. Selesaikan transaksi terlebih dahulu.");
     }
+
+    $count = Book::onlyTrashed()
+        ->whereIn('id', $validated['ids'])
+        ->count();
+
+    Book::onlyTrashed()
+        ->whereIn('id', $validated['ids'])
+        ->forceDelete();
+
+    return redirect()->route('books.trash')
+        ->with('success', "Berhasil menghapus {$count} buku secara permanen.");
+}
+
+public function forceDelete(string $id)
+{
+    try {
+        $this->repo->forceDelete($id);
+
+        return redirect()
+            ->route('books.trash')
+            ->with('success', 'Buku berhasil dihapus permanen.');
+
+    } catch (\Exception $e) {
+        return redirect()
+            ->route('books.trash')
+            ->with('error', 'Buku tidak dapat dihapus karena masih terkait dengan transaksi aktif. Selesaikan transaksi terlebih dahulu.');
+    }
+}
     public function restore(string $id)
     {
         $this->repo->restore($id);

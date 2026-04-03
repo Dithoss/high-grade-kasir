@@ -32,7 +32,6 @@ Route::get('/', function () {
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 
-// Registrasi hanya bisa diakses jika setting registration_open = true
 Route::middleware(['guest', 'registration.open'])->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.store');
@@ -48,7 +47,7 @@ Route::resource('products', ProductController::class)->except('show');
 
 /*
 |--------------------------------------------------------------------------
-| AUTHENTICATED USERS — maintenance middleware aktif di sini
+| AUTHENTICATED USERS
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'maintenance'])->group(function () {
@@ -94,7 +93,7 @@ Route::middleware(['auth', 'maintenance'])->group(function () {
     Route::post('/payment/checkout', [PaymentController::class, 'checkout']);
 
     Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
-    Route::post('/wishlist/{book:slug}/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+    Route::post('/wishlist/{bookId}/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
 
     Route::get('transactions/history', [TransactionController::class, 'history'])
         ->name('transactions.history');
@@ -143,32 +142,59 @@ Route::middleware(['auth', 'maintenance'])->group(function () {
 
         Route::get('/admin/preorders', [PreorderController::class, 'adminIndex'])
             ->name('admin.preorders.index');
+        Route::patch('/admin/preorders/{id}/mark-ready', [PreorderController::class, 'adminMarkReady'])
+            ->name('admin.preorders.markReady');
+        Route::post('/admin/preorders/{id}/notify', [PreorderController::class, 'adminNotify'])
+            ->name('admin.preorders.notify');
+        Route::delete('/admin/preorders/{id}', [PreorderController::class, 'adminCancel'])
+            ->name('admin.preorders.cancel');
+        Route::get('/admin/preorders/{id}', [PreorderController::class, 'adminShow'])
+            ->name('admin.preorders.show');
+
+        /*
+        |----------------------------------------------------------------------
+        | Books — BULK & STATIC routes HARUS di atas {book} wildcard
+        |----------------------------------------------------------------------
+        */
+        Route::delete('books/mass-delete', [BookController::class, 'massDelete'])
+            ->name('books.mass-delete');
+        Route::post('books/mass-restore', [BookController::class, 'massRestore'])
+            ->name('books.mass-restore');
+        Route::delete('books/mass-force-delete', [BookController::class, 'massForceDelete'])
+            ->name('books.mass-force-delete');
+        Route::delete('books/trash/empty', [BookController::class, 'emptyTrash'])
+            ->name('books.empty-trash');
+        Route::get('books-trash', [BookController::class, 'trash'])
+            ->name('books.trash');
+        Route::get('books/create', [BookController::class, 'create'])
+            ->name('books.create');
+        Route::post('books', [BookController::class, 'store'])
+            ->name('books.store');
+
+        /*
+        | {book} wildcard routes — selalu di bawah static routes
+        */
+        Route::get('books/{book}/edit', [BookController::class, 'edit'])
+            ->name('books.edit');
+        Route::put('books/{book}', [BookController::class, 'update'])
+            ->name('books.update');
+        Route::delete('books/{book}', [BookController::class, 'destroy'])
+            ->name('books.destroy');
+        Route::put('books/{id}/restore', [BookController::class, 'restore'])
+            ->name('books.restore');
+        Route::delete('books/{book}/force-delete', [BookController::class, 'forceDelete'])
+            ->name('books.force-delete');
+
+        Route::resource('categories', CategoryController::class);
 
         Route::delete('/categories/mass-delete', [CategoryController::class, 'massDelete'])
             ->name('categories.mass-delete');
-        Route::delete('/books/mass-delete', [BookController::class, 'massDelete'])
-            ->name('books.mass-delete');
 
-        Route::get('books/create', [BookController::class, 'create'])->name('books.create');
-        Route::post('books', [BookController::class, 'store'])->name('books.store');
-        Route::get('books/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
-        Route::put('books/{book}', [BookController::class, 'update'])->name('books.update');
-        Route::delete('books/{book}', [BookController::class, 'destroy'])->name('books.destroy');
-        Route::get('books-trash', [BookController::class, 'trash'])->name('books.trash');
-        Route::put('books/{id}/restore', [BookController::class, 'restore'])->name('books.restore');
-        Route::delete('books/trash/empty',     [BookController::class, 'emptyTrash'])->name('books.empty-trash');
-        Route::post('books/mass-restore',    [BookController::class, 'massRestore'])->name('books.mass-restore');
-        Route::delete('books/mass-force-delete', [BookController::class, 'massForceDelete'])->name('books.mass-force-delete');
-        Route::delete('books/{book}/force-delete', [BookController::class, 'massForceDelete'])->name('books.force-delete');
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])
+            ->name('audit.index');
 
-        Route::resource('categories', CategoryController::class);
-        Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.index');
-
- 
         Route::post('transactions/admin', [TransactionController::class, 'storeAdmin'])
             ->name('transactions.store.admin');
-        Route::get('transactions-trash', [TransactionController::class, 'trash'])
-            ->name('transactions.trash');
         Route::put('transactions/{id}/restore', [TransactionController::class, 'restore'])
             ->name('transactions.restore');
         Route::post('transactions/{transaction}/confirm-return', [TransactionController::class, 'confirmReturn'])
@@ -201,15 +227,15 @@ Route::middleware(['auth', 'maintenance'])->group(function () {
         /*
         |----------------------------------------------------------------------
         | Library Card — Admin
-        | PENTING: by-user/{userId} HARUS di atas {id} agar tidak bentrok
+        | PENTING: by-user/{userId} HARUS di atas {id}
         |----------------------------------------------------------------------
         */
         Route::prefix('admin/library-cards')->name('admin.library-cards.')->group(function () {
-            Route::get('/',                [LibraryCardController::class, 'index'])        ->name('index');
-            Route::get('/by-user/{userId}',[LibraryCardController::class, 'byUser'])       ->name('by-user');
-            Route::get('/{id}',            [LibraryCardController::class, 'detail'])       ->name('detail');
-            Route::patch('/{id}/status',   [LibraryCardController::class, 'updateStatus']) ->name('update-status');
-            Route::post('/{id}/regenerate',[LibraryCardController::class, 'regenerate'])   ->name('regenerate');
+            Route::get('/',                 [LibraryCardController::class, 'index'])        ->name('index');
+            Route::get('/by-user/{userId}', [LibraryCardController::class, 'byUser'])       ->name('by-user');
+            Route::get('/{id}',             [LibraryCardController::class, 'detail'])       ->name('detail');
+            Route::patch('/{id}/status',    [LibraryCardController::class, 'updateStatus']) ->name('update-status');
+            Route::post('/{id}/regenerate', [LibraryCardController::class, 'regenerate'])   ->name('regenerate');
         });
     });
 
@@ -237,4 +263,9 @@ Route::middleware(['auth', 'maintenance'])->group(function () {
         Route::delete('/preorders/{id}', [PreorderController::class, 'cancel'])->name('preorders.cancel');
         Route::get('/preorders/{id}/confirm', [PreorderController::class, 'confirm'])->name('preorders.confirm');
     });
+
+    //php artisan route:clear
+    //php artisan cache:clear
+    //php artisan config:clear
+    //php artisan view:clear
 });

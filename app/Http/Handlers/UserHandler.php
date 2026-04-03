@@ -14,6 +14,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class UserHandler
 {
@@ -32,7 +33,9 @@ class UserHandler
         ]);
 
         if (!$user) {
-            throw new \Exception('Email atau password salah');
+            throw ValidationException::withMessages([
+                'email' => ['Email atau password salah'],
+            ]);
         }
 
         return $user;

@@ -40,7 +40,7 @@ class Transaction extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function items()
@@ -50,7 +50,7 @@ class Transaction extends Model
 
     public function fine()
     {
-        return $this->hasMany(Fine::class);
+        return $this->hasMany(Fine::class)->withTrashed();
     }
 
     public function canBeExtended(): bool
@@ -73,6 +73,6 @@ class Transaction extends Model
     }
     public function book()
     {
-        return $this->belongsTo(Book::class);
+        return $this->belongsTo(Book::class)->withTrashed();
     }
 }

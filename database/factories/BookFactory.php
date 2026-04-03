@@ -47,7 +47,6 @@ class BookFactory extends Factory
         ];
 
         $name = $this->faker->unique()->randomElement($books);
-
         $imagePath = $this->generateBookCover();
 
         return [
@@ -55,7 +54,12 @@ class BookFactory extends Factory
             'name'        => $name,
             'slug'        => Str::slug($name) . '-' . Str::random(6),
             'writer'      => $this->faker->randomElement($writers),
-            'stock'       => $this->faker->numberBetween(1, 50),
+
+            // 30% kosong, 70% ada stok
+            'stock'       => $this->faker->boolean(30)
+                                ? 0
+                                : $this->faker->numberBetween(1, 50),
+
             'image'       => $imagePath,
             'barcode'     => 'BK-' . str_pad($this->faker->unique()->numberBetween(1, 999999), 6, '0', STR_PAD_LEFT),
             'category_id' => Category::factory(),

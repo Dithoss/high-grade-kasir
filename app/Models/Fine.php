@@ -36,12 +36,12 @@ class Fine extends Model
 
      public function transaction()
     {
-        return $this->belongsTo(Transaction::class);
+        return $this->belongsTo(Transaction::class)->withTrashed();
     }
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
     public function scopeForUser($query, $userId)
     {

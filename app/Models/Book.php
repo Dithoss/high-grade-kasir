@@ -13,6 +13,8 @@ use Spatie\Permission\Traits\HasRoles;
 class Book extends Model
 {
     use HasFactory, Notifiable, HasUuids, SoftDeletes;
+    protected $keyType = 'string';     
+    public $incrementing = false;
     protected $fillable = [
         'name', 'barcode', 'stock', 'writer', 'category_id','slug', 'image','sypnosis'];
 
@@ -23,14 +25,14 @@ class Book extends Model
     }
     public function transactions()
     {
-        return $this->hasMany(Transaction::class);
+        return $this->hasMany(Transaction::class)->withTrashed();
     }
     public function category(){
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class)->withTrashed();
     }
     public function wishlists()
     {
-        return $this->belongsTo(Book::class);
+        return $this->belongsTo(Book::class)->withTrashed();
     }
     public function views(){
         return $this->hasMany(Algorithm::class);

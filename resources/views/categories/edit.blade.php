@@ -94,38 +94,6 @@
                 @enderror
             </div>
 
-            {{-- Color Fallback --}}
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                    Warna Gradient Fallback
-                </label>
-                <div class="grid grid-cols-4 gap-2">
-                    @php
-                        $colors = [
-                            'from-blue-500 to-indigo-600'   => 'Biru',
-                            'from-emerald-500 to-teal-600'  => 'Hijau',
-                            'from-rose-500 to-pink-600'     => 'Merah Muda',
-                            'from-amber-500 to-orange-600'  => 'Oranye',
-                            'from-violet-500 to-purple-600' => 'Ungu',
-                            'from-cyan-500 to-sky-600'      => 'Biru Muda',
-                            'from-red-500 to-rose-600'      => 'Merah',
-                            'from-lime-500 to-green-600'    => 'Hijau Muda',
-                        ];
-                        $currentColor = old('color', $category->color);
-                    @endphp
-                    @foreach($colors as $value => $label)
-                        <label class="cursor-pointer" title="{{ $label }}">
-                            <input type="radio" name="color" value="{{ $value }}" class="sr-only color-radio"
-                                   {{ $currentColor === $value ? 'checked' : '' }}>
-                            <div class="w-full h-10 rounded-lg bg-gradient-to-br {{ $value }} color-swatch
-                                {{ $currentColor === $value ? 'ring-2 ring-offset-2 ring-gray-800' : '' }}
-                                hover:scale-105 transition-transform">
-                            </div>
-                        </label>
-                    @endforeach
-                </div>
-            </div>
-
             <div class="flex gap-3 pt-4 border-t border-gray-100">
                 <a href="{{ route('categories.index') }}"
                     class="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition text-center">

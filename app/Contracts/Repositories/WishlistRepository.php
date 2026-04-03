@@ -15,7 +15,8 @@ class WishlistRepository implements WishlistInterface
     public function getByUser(User $user): Collection
     {
         return Wishlist::where('user_id', $user->id)
-            ->with(['book.category'])
+            ->with(['book' => fn($q) => $q->withTrashed(),
+                    'book.category' => fn($q) => $q->withTrashed()])
             ->latest()
             ->get();
     }

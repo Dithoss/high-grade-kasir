@@ -77,4 +77,8 @@ class User extends Authenticatable
     {
         return $this->hasOne(LibraryCard::class);
     }
+    public function preorders()
+    {
+        return $this->hasMany(Preorder::class);
+    }
 }

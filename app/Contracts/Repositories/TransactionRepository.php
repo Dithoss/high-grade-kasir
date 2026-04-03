@@ -79,8 +79,10 @@ class TransactionRepository implements TransactionInterface
     
     public function forceDelete(mixed $id): bool
     {
-        return $this->model->withTrashed()->findOrFail($id)->forceDelete();
+        $transaction = $this->model->withTrashed()->findOrFail($id);
+        return $transaction->forceDelete();
     }
+
 
     public function restore(mixed $id): bool
     {

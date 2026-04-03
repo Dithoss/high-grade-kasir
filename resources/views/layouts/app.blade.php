@@ -396,6 +396,14 @@
                         </div>
                         <span class="ml-4 font-medium text-base">Riwayat Aktivitas</span>
                     </a>
+                    <a href="{{ route('admin.preorders.index') }}"
+                       class="nav-link flex items-center px-4 py-3.5 text-gray-700 hover:bg-blue-50 rounded-xl group"
+                       data-page="audit">
+                        <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-indigo-50 group-hover:bg-indigo-100">
+<i class="fas fa-hourglass-half icon-large text-amber-600"></i>
+                        </div>
+                        <span class="ml-4 font-medium text-base">Pre Order</span>
+                    </a>
 
                     <a href="{{ route('admin.fines.index') }}"
                        class="nav-link flex items-center px-4 py-3.5 text-gray-700 hover:bg-blue-50 rounded-xl group"

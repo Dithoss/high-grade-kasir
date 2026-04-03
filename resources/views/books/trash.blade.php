@@ -259,22 +259,10 @@
 @section('content')
 @php
     $totalTrashed  = $book->total();
-    $allTrashed    = \App\Models\Book::onlyTrashed();
     $trashedToday  = \App\Models\Book::onlyTrashed()->whereDate('deleted_at', today())->count();
     $trashedThisWk = \App\Models\Book::onlyTrashed()->whereBetween('deleted_at', [now()->startOfWeek(), now()])->count();
 @endphp
-@foreach(['success', 'info', 'error'] as $type)
-    @if(session($type))
-    <div class="trash-notice" style="
-        {{ $type === 'success' ? 'border-color:#bbf7d0;background:#f0fdf4;color:#15803d;' : '' }}
-        {{ $type === 'error'   ? 'border-color:#fecaca;background:#fef2f2;color:#b91c1c;' : '' }}
-        {{ $type === 'info'    ? 'border-color:#bfdbfe;background:#eff6ff;color:#1d4ed8;' : '' }}
-    ">
-        <i class="fas fa-{{ $type === 'success' ? 'check-circle' : ($type === 'error' ? 'times-circle' : 'info-circle') }}"></i>
-        <span>{{ session($type) }}</span>
-    </div>
-    @endif
-@endforeach
+
 <div class="admin-trash space-y-4">
 
     {{-- ── Top Bar ── --}}
@@ -287,8 +275,10 @@
         <div class="flex items-center gap-2 flex-wrap">
             <form method="POST" action="{{ route('books.empty-trash') }}"
                   onsubmit="return confirm('Hapus SEMUA buku di sampah secara permanen? Tindakan ini tidak dapat dibatalkan.')">
-                @csrf @method('DELETE')
-                <button type="submit" class="btn-admin btn-red" {{ $totalTrashed === 0 ? 'disabled style=opacity:.4;cursor:not-allowed;' : '' }}>
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn-admin btn-red" {{ $totalTrashed === 0 ? 'disabled' : '' }}
+                    style="{{ $totalTrashed === 0 ? 'opacity:.4;cursor:not-allowed;' : '' }}">
                     <i class="fas fa-fire text-xs"></i> Kosongkan Sampah
                 </button>
             </form>
@@ -337,7 +327,7 @@
 
             <select name="sort_by" class="admin-select" onchange="document.getElementById('trashFilterForm').submit()">
                 <option value="deleted_at" {{ request('sort_by','deleted_at') === 'deleted_at' ? 'selected' : '' }}>Terbaru Dihapus</option>
-                <option value="name"       {{ request('sort_by') === 'name'   ? 'selected' : '' }}>Nama A–Z</option>
+                <option value="name"       {{ request('sort_by') === 'name'       ? 'selected' : '' }}>Nama A–Z</option>
                 <option value="created_at" {{ request('sort_by') === 'created_at' ? 'selected' : '' }}>Tanggal Dibuat</option>
             </select>
 
@@ -353,7 +343,7 @@
         </div>
     </form>
 
-    {{-- ── Bulk action bar ── --}}
+    {{-- ── Bulk Action Bar ── --}}
     <div class="bulk-bar" id="bulkBar">
         <span class="bulk-count" id="bulkCount">0</span>
         <span style="color:var(--muted);font-size:.875rem;">item dipilih</span>
@@ -372,14 +362,15 @@
         {{-- Bulk Permanent Delete --}}
         <form method="POST" action="{{ route('books.mass-force-delete') }}" id="massForceDeleteForm"
               onsubmit="return confirmMassPermanent()">
-            @csrf @method('DELETE')
+            @csrf
+            @method('DELETE')
             <div id="massForceDeleteInputs"></div>
             <button type="submit" class="btn-admin btn-red">
                 <i class="fas fa-trash text-xs"></i> Hapus Permanen
             </button>
         </form>
 
-        <button onclick="clearSelection()" class="btn-admin btn-muted" style="margin-left:auto;">
+        <button type="button" onclick="clearSelection()" class="btn-admin btn-muted" style="margin-left:auto;">
             <i class="fas fa-times text-xs"></i> Batal
         </button>
     </div>
@@ -446,21 +437,26 @@
                         </td>
                         <td>
                             <div style="display:flex;justify-content:flex-end;gap:4px;">
-                                {{-- Restore --}}
+
+                                {{-- ✅ Restore — method PUT --}}
                                 <form method="POST" action="{{ route('books.restore', $b->id) }}">
                                     @csrf
+                                    @method('PUT')
                                     <button type="submit" class="row-action restore" title="Pulihkan">
                                         <i class="fas fa-trash-restore"></i>
                                     </button>
                                 </form>
-                                {{-- Permanent Delete --}}
+
+                                {{-- ✅ Permanent Delete — method DELETE --}}
                                 <form method="POST" action="{{ route('books.force-delete', $b->id) }}"
                                       onsubmit="return confirm('Hapus \'{{ addslashes($b->name) }}\' secara permanen?')">
-                                    @csrf @method('DELETE')
+                                    @csrf
+                                    @method('DELETE')
                                     <button type="submit" class="row-action perm-del" title="Hapus Permanen">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
+
                             </div>
                         </td>
                     </tr>
@@ -517,7 +513,6 @@
 
 @push('scripts')
 <script>
-// ── Checkbox logic ──
 function toggleAll(el) {
     document.querySelectorAll('.book-check').forEach(c => {
         c.checked = el.checked;
@@ -528,24 +523,28 @@ function toggleAll(el) {
 
 function updateBulk() {
     const checked = document.querySelectorAll('.book-check:checked');
-    const bar = document.getElementById('bulkBar');
+    const bar     = document.getElementById('bulkBar');
+
     document.getElementById('bulkCount').textContent = checked.length;
     bar.classList.toggle('visible', checked.length > 0);
 
-    // Sync hidden inputs for both forms
+    // Sync hidden inputs untuk kedua form bulk
     ['massRestoreInputs', 'massForceDeleteInputs'].forEach(containerId => {
         const container = document.getElementById(containerId);
         container.innerHTML = '';
         checked.forEach(c => {
-            const inp = document.createElement('input');
-            inp.type = 'hidden'; inp.name = 'ids[]'; inp.value = c.value;
+            const inp   = document.createElement('input');
+            inp.type    = 'hidden';
+            inp.name    = 'ids[]';
+            inp.value   = c.value;
             container.appendChild(inp);
         });
     });
 
     const all = document.querySelectorAll('.book-check');
-    document.getElementById('checkAll').indeterminate = checked.length > 0 && checked.length < all.length;
-    document.getElementById('checkAll').checked = checked.length === all.length && all.length > 0;
+    const checkAll = document.getElementById('checkAll');
+    checkAll.indeterminate = checked.length > 0 && checked.length < all.length;
+    checkAll.checked       = all.length > 0 && checked.length === all.length;
 
     document.querySelectorAll('.book-check').forEach(c => {
         c.closest('tr').classList.toggle('selected', c.checked);
@@ -557,17 +556,21 @@ function clearSelection() {
         c.checked = false;
         c.closest('tr').classList.remove('selected');
     });
-    document.getElementById('checkAll').checked = false;
+    const checkAll = document.getElementById('checkAll');
+    checkAll.checked       = false;
+    checkAll.indeterminate = false;
     document.getElementById('bulkBar').classList.remove('visible');
 }
 
 function confirmMassRestore() {
     const n = document.querySelectorAll('.book-check:checked').length;
+    if (n === 0) { alert('Pilih minimal satu buku.'); return false; }
     return confirm(`Pulihkan ${n} buku yang dipilih?`);
 }
 
 function confirmMassPermanent() {
     const n = document.querySelectorAll('.book-check:checked').length;
+    if (n === 0) { alert('Pilih minimal satu buku.'); return false; }
     return confirm(`Hapus ${n} buku secara PERMANEN? Tindakan ini tidak dapat dibatalkan.`);
 }
 </script>

@@ -15,6 +15,6 @@ class Category extends Model
         'name','image'
     ];
     public function books(){
-        return $this->hasMany(Book::class);
+        return $this->hasMany(Book::class)->withTrashed();
     }
 }
